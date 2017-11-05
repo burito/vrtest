@@ -5,7 +5,6 @@ Build Environment
 -----------------
 A full description can be found here...
 http://danpburke.blogspot.com.au/2017/06/fresh-system-install.html
-
 It's basically Mingw64 on windows, Clang everywhere else. Windows and Linux use ImageMagick to process the icon as part of the build process.
 
     make -j8   # build it using 8 threads   
@@ -16,12 +15,18 @@ There are no external dependancies. It will "just work". Visual Studio Code is t
 Execution
 ---------
 On Windows...
+
     gui.exe
+
 On Linux, use...
+
     ~/.steam/steam/ubuntu12_32/steam-runtime/run.sh ./gui
+
 On Mac, use one of...
+
     open ./gui.app
     ./gui.app/Contents/MacOS/gui
+
 It's not correctly packaged, ie it needs to be run from this directory so that it can find the shaders and the stanford bunny.
 
 Current Status
