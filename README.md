@@ -5,6 +5,7 @@ Build Environment
 -----------------
 A full description can be found here...
 http://danpburke.blogspot.com.au/2017/06/fresh-system-install.html
+
 It's basically Mingw64 on windows, Clang everywhere else. Windows and Linux use ImageMagick to process the icon as part of the build process.
 
     make -j8   # build it using 8 threads   
@@ -30,12 +31,12 @@ It works "perfectly" on Windows, it works "technically" on Linux (frame rate is 
 Credits
 -------
 
-src/stb_image.h - Sean Barret http://nothings.org/
-src/fast_atof.c - Tom Van Baak  http://www.leapsecond.com/
-src/invert4x4_sse.h - ftp://download.intel.com/design/pentiumiii/sml/24504301.pdf
-src/openvr/* - Valve https://github.com/ValveSoftware/openvr
-src/glew/* - http://glew.sourceforge.net/
-data/stanford-bunny.obj - http://graphics.stanford.edu/data/3Dscanrep/
+* src/stb_image.h - Sean Barret http://nothings.org/
+* src/fast_atof.c - Tom Van Baak  http://www.leapsecond.com/
+* src/invert4x4_sse.h - ftp://download.intel.com/design/pentiumiii/sml/24504301.pdf
+* src/openvr/* - Valve https://github.com/ValveSoftware/openvr
+* src/glew/* - http://glew.sourceforge.net/
+* data/stanford-bunny.obj - http://graphics.stanford.edu/data/3Dscanrep/
 
 For everything else, I am to blame.
 
