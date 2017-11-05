@@ -1,0 +1,25 @@
+{
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "(lldb) Launch",
+                "type": "cppdbg",
+                "request": "launch",
+                "linux": {
+                    "program": "~/.steam/steam/ubuntu12_32/steam-runtime/run.sh ${workspaceRoot}/gui"
+                },
+                "osx": {
+                    "program": "${workspaceRoot}/gui.app/Contents/MacOS/gui"
+                },
+//                "windows": {
+                    "program": "${workspaceRoot}/gui.exe",
+ //               },
+                "args": [],
+                "stopAtEntry": false,
+                "cwd": "${workspaceRoot}",
+                "environment": [],
+//                "externalConsole": true,
+                "MIMode": "lldb"
+            }
+        ]
+    }

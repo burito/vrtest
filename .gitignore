@@ -1,0 +1,23 @@
+
+# version git hack
+src/version.h
+
+# compiler output
+*.o
+*.exe
+*.res
+gui
+gui.bin
+gui.app
+build
+
+# trash
+.*.swp
+*~
+.DS_Store
+
+# data files
+*.msh
+#*.obj
+*.mtl
+*.oct
