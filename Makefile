@@ -10,7 +10,7 @@ OBJS = $(PLATFORM) main.o text.o mesh.o image.o stb_image.o 3dmaths.o shader.o
 WDIR = build/win
 _WOBJS = $(OBJS) GL/glew.o win32.o win32.res
 WOBJS = $(patsubst %,$(WDIR)/%,$(_WOBJS))
-WLIBS = $(LIBRARIES) -L. -lshell32 -luser32 -lgdi32 -lopengl32 lib/win/openvr_api.dll -lwinmm -lws2_32 -lxinput9_1_0 -L.
+WLIBS = $(LIBRARIES) lib/win/openvr_api.dll -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
 #	-L"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\lib\x64"
 #	-L"C:\Program Files (x86)\AMD APP SDK\3.0-0-Beta\lib\x86_64"
 
@@ -18,7 +18,7 @@ LDIR = build/lin
 LCC = clang
 _LOBJS = $(OBJS) GL/glew.o x11.o 
 LOBJS = $(patsubst %,$(LDIR)/%,$(_LOBJS))
-LLIBS = $(LIBRARIES) -lm -lGL -lX11 -lGLU -lXi -ldl ./lib/linux/libopenvr_api.so 
+LLIBS = $(LIBRARIES) ./lib/linux/libopenvr_api.so -lm -lGL -lX11 -lGLU -lXi -ldl
 
 MDIR = build/mac
 MCC = clang
@@ -53,9 +53,10 @@ $(WDIR)/win32.res: $(SDIR)/win32.rc $(WDIR)/Icon.ico
 	$(WINDRES) -I $(WDIR) -O coff src/win32.rc -o $@
 $(WDIR)/%.o: $(SDIR)/%.c
 	$(WCC) $(CFLAGS) -DWIN32 $(INCLUDES)-c $< -o $@
-gui.exe: $(WOBJS)
-	$(WCC) $^ $(WLIBS) -o $@
-	copy lib/win/openvr_api.dll .
+openvr_api.dll:
+	cp lib/win/openvr_api.dll .
+gui.exe: openvr_api.dll $(WOBJS)
+	$(WCC) $(WOBJS)$(WLIBS) -o $@
 
 # crazy stuff to get icons on x11
 $(LDIR)/x11icon: $(SDIR)/x11icon.c

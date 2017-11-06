@@ -10,6 +10,7 @@ gui
 gui.bin
 gui.app
 build
+openvr_api.dll
 
 # trash
 .*.swp
