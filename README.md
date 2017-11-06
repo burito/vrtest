@@ -38,7 +38,7 @@ Credits
 
 * src/stb_image.h - Sean Barret http://nothings.org/
 * src/fast_atof.c - Tom Van Baak  http://www.leapsecond.com/
-* src/invert4x4_sse.h - ftp://download.intel.com/design/pentiumiii/sml/24504301.pdf
+* src/invert4x4_sse.h - https://github.com/niswegmann/small-matrix-inverse
 * src/openvr/* - Valve https://github.com/ValveSoftware/openvr
 * src/glew/* - http://glew.sourceforge.net/
 * data/stanford-bunny.obj - http://graphics.stanford.edu/data/3Dscanrep/
