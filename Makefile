@@ -32,6 +32,7 @@ MLIBS = -F/System/Library/Frameworks -F. -framework OpenGL -framework CoreVideo 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
 default: gui
+# this entry is for building windows binaries on linux with mingw64
 WCC = x86_64-w64-mingw32-gcc
 WINDRES = x86_64-w64-mingw32-windres
 #WCC = i686-w64-mingw32-gcc
@@ -40,7 +41,9 @@ else
 ifeq ($(UNAME), Darwin)
 default: gui.app
 else
-WCC = gcc
+# this entry is for building windows binaries on windows, with mingw64 or clang
+# WCC = gcc
+WCC = clang -target x86_64-w64-windows-gnu
 WINDRES = windres
 default: gui.exe
 endif 
