@@ -37,7 +37,7 @@ freely, subject to the following restrictions:
 #include "text.h"
 
 
-void img_glinit(IMG *img)
+static void img_glinit(IMG *img)
 {
 	int type = 0, intfmt = 0;
 

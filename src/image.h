@@ -35,10 +35,8 @@ typedef struct IMG
 } IMG;
 
 
-void img_glinit(IMG*);
-void img_free(IMG*);
-
 IMG* img_load(const char * filename);
+void img_free(IMG*);
 
 #endif
 
