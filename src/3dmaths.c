@@ -133,7 +133,6 @@ void vect_cross(float3 *result, const float3 *left, const float3 *right)
 }
 
 
-
 /*
  * Matrix functions
  */
@@ -166,15 +165,6 @@ void mat_trans(float ret[16], const float x, const float y, const float z)
 	ret[0*4+3] = 0.0f; ret[1*4+3] = 0.0f; ret[2*4+3] = 0.0f; ret[3*4+3] = 1.0f;
 }
 
-/*
-void mat_trans(float ret[16], const float x, const float y, const float z)
-{
-	ret[0*4+0] = 1.0f; ret[0*4+1] = 0.0f; ret[0*4+2] = 0.0f; ret[0*4+3] = x;
-	ret[1*4+0] = 0.0f; ret[1*4+1] = 1.0f; ret[1*4+2] = 0.0f; ret[1*4+3] = y;
-	ret[2*4+0] = 0.0f; ret[2*4+1] = 0.0f; ret[2*4+2] = 1.0f; ret[2*4+3] = z;
-	ret[3*4+0] = 0.0f; ret[3*4+1] = 0.0f; ret[3*4+2] = 0.0f; ret[3*4+3] = 1.0f;
-}
-*/
 
 void mat_rotX(float ret[16], float theta)
 {
@@ -184,6 +174,7 @@ void mat_rotX(float ret[16], float theta)
 	ret[0*4+3] = 0.0f; ret[1*4+3] = 0.0f; ret[2*4+3] = 0.0f; ret[3*4+3] = 1.0f;
 }
 
+
 void mat_rotY(float ret[16], float theta)
 {
 	ret[0*4+0] = cos(theta); ret[1*4+0] = 0.0f; ret[2*4+0] = sin(theta); ret[3*4+0] = 0.0f;
@@ -191,6 +182,7 @@ void mat_rotY(float ret[16], float theta)
 	ret[0*4+2] = -sin(theta); ret[1*4+2] = 0.0f; ret[2*4+2] = cos(theta); ret[3*4+2] = 0.0f;
 	ret[0*4+3] = 0.0f; ret[1*4+3] = 0.0f; ret[2*4+3] = 0.0f; ret[3*4+3] = 1.0f;
 }
+
 
 void mat_rotZ(float ret[16], float theta)
 {
@@ -201,39 +193,4 @@ void mat_rotZ(float ret[16], float theta)
 }
 
 // https://github.com/niswegmann/small-matrix-inverse
-
-
-/*
-// https://stackoverflow.com/questions/18499971/efficient-4x4-matrix-multiplication-c-vs-assembly
-asm("    .text
-.align 32                           # 1. function entry alignment
-.globl matrixMultiplyASM            #    (for a faster call)
-.type matrixMultiplyASM, @function
-matrixMultiplyASM:
-movaps   (%rdi), %xmm0
-movaps 16(%rdi), %xmm1
-movaps 32(%rdi), %xmm2
-movaps 48(%rdi), %xmm3
-movq $48, %rcx                      # 2. loop reversal
-1:                                      #    (for simpler exit condition)
-movss (%rsi, %rcx), %xmm4           # 3. extended address operands
-shufps $0, %xmm4, %xmm4             #    (faster than pointer calculation)
-mulps %xmm0, %xmm4
-movaps %xmm4, %xmm5
-movss 4(%rsi, %rcx), %xmm4
-shufps $0, %xmm4, %xmm4
-mulps %xmm1, %xmm4
-addps %xmm4, %xmm5
-movss 8(%rsi, %rcx), %xmm4
-shufps $0, %xmm4, %xmm4
-mulps %xmm2, %xmm4
-addps %xmm4, %xmm5
-movss 12(%rsi, %rcx), %xmm4
-shufps $0, %xmm4, %xmm4
-mulps %xmm3, %xmm4
-addps %xmm4, %xmm5
-movaps %xmm5, (%rdx, %rcx)
-subq $16, %rcx                      # one 'sub' (vs 'add' & 'cmp')
-jge 1b                              # SF=OF, idiom: jump if positive
-ret")
-*/
+#include "invert4x4_sse.h"

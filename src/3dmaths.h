@@ -115,4 +115,6 @@ void mat_rotX(float ret[16], const float theta);
 void mat_rotY(float ret[16], const float theta);
 void mat_rotZ(float ret[16], const float theta);
 
+void invert4x4(const float * src, float * dst);
+
 #endif /* __3DMATHS_H_ */

@@ -31,6 +31,7 @@ freely, subject to the following restrictions:
 #include "mesh.h"
 #include "shader.h"
 #include "text.h"
+#include "3dmaths.h"
 #include "glerror.h"
 
 #include <stdio.h>
@@ -40,8 +41,6 @@ float time = 0;
 
 float step = 0.0f;
 
-
-#include "invert4x4_sse.h"
 
 #include <openvr_capi.h>
 
