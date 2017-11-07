@@ -31,6 +31,7 @@ freely, subject to the following restrictions:
 #include <string.h>
 #include "3dmaths.h"
 #include "mesh.h"
+#include "glerror.h"
 #include "text.h"
 
 #define BUF_LEN 1024

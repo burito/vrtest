@@ -22,7 +22,6 @@ freely, subject to the following restrictions:
 */
 
 
-char* glError(int error);
 char* hcopy(const char *string);
 char* repath(const char *hostpath, const char *file);
 void tailchomp(char *string);

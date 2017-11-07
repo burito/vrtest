@@ -4,7 +4,7 @@ PLATFORM =
 LIBRARIES = 
 SDIR = src
 
-OBJS = $(PLATFORM) main.o text.o mesh.o image.o stb_image.o 3dmaths.o shader.o
+OBJS = $(PLATFORM) main.o text.o mesh.o image.o stb_image.o 3dmaths.o shader.o glerror.o
 
 # Build rules
 WDIR = build/win

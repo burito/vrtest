@@ -31,6 +31,7 @@ freely, subject to the following restrictions:
 #include "mesh.h"
 #include "shader.h"
 #include "text.h"
+#include "glerror.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -43,17 +44,7 @@ float step = 0.0f;
 #include "invert4x4_sse.h"
 
 #include <openvr_capi.h>
-//#include <openvr.h>
-/*
-#ifdef WIN32
-extern __declspec(dllimport) bool VR_IsHmdPresent();
-extern __declspec(dllimport) bool VR_IsRuntimeInstalled();
-extern __declspec(dllimport) intptr_t VR_InitInternal(EVRInitError *peError, EVRApplicationType eType);
-extern __declspec(dllimport) bool VR_IsInterfaceVersionValid(const char *pchInterfaceVersion);
-extern __declspec(dllimport) intptr_t VR_GetGenericInterface(const char *pchInterfaceVersion, EVRInitError *peError);
-#endif
-#ifdef __APPLE__
-*/
+
 intptr_t VR_InitInternal( EVRInitError *peError, EVRApplicationType eType );
 void VR_ShutdownInternal();
 int VR_IsHmdPresent();
@@ -61,12 +52,12 @@ intptr_t VR_GetGenericInterface( const char *pchInterfaceVersion, EVRInitError *
 int VR_IsRuntimeInstalled();
 const char * VR_GetVRInitErrorAsSymbol( EVRInitError error );
 const char * VR_GetVRInitErrorAsEnglishDescription( EVRInitError error );
-//#endif
+
 
 struct VR_IVRSystem_FnTable * OVR = NULL;
 struct VR_IVRCompositor_FnTable * OVRC; 
 // k_unMaxTrackedDeviceCount = 16
-TrackedDevicePose_t m_rTrackedDevicePose [16];
+TrackedDevicePose_t m_rTrackedDevicePose [k_unMaxTrackedDeviceCount];
 
 struct FramebufferDesc
 {
@@ -84,9 +75,9 @@ bool CreateFrameBuffer( int nWidth, int nHeight, struct FramebufferDesc *framebu
 uint32_t m_nRenderWidth;
 uint32_t m_nRenderHeight;
 int m_iValidPoseCount;
-char m_strPoseClasses[17]; // should never get above 16 - k_unMaxTrackedDeviceCount
-char m_rDevClassChar[17];
-float m_rmat4DevicePose[16][16]; // first 16 is k_unMax, second is 4x4 matrix
+char m_strPoseClasses[k_unMaxTrackedDeviceCount+1]; // should never get above 16 = k_unMaxTrackedDeviceCount
+char m_rDevClassChar[k_unMaxTrackedDeviceCount+1];
+float m_rmat4DevicePose[k_unMaxTrackedDeviceCount][16]; // first 16 is k_unMax, second is 4x4 matrix
 float hmdPose[16];
 float eye_left[16];
 float eye_right[16];
@@ -95,29 +86,6 @@ WF_OBJ * bunny;
 IMG * img;
 GLSLSHADER *shader;
 
-char* glErrorFbStr(GLenum status)
-{
-
-	switch(status) {
-	case GL_FRAMEBUFFER_COMPLETE: // 0x8CD5
-		return "GL_FRAMEBUFFER_COMPLETE";
-	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: // 0x8CD6
-		return "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
-	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: // 0x8CD7
-		return "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
-	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: // 0x8CDB
-		return "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER";
-	case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: // 0x8CDC
-		return "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER";
-	case GL_FRAMEBUFFER_UNSUPPORTED: // 0x8CDD
-		return "GL_FRAMEBUFFER_UNSUPPORTED";
-	case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: // 0x8D56
-		return "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE";
-	default:
-		return "Unknown";	
-	}
-	
-}
 
 void ConvertSteamVRMatrixToMatrix4(const struct HmdMatrix34_t in, float * out)
 {
@@ -154,7 +122,7 @@ bool CreateFrameBuffer( int nWidth, int nHeight, struct FramebufferDesc *framebu
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
-		printf("framebuffer1 creation failed: %s\n", glErrorFbStr(status));
+		printf("framebuffer1 creation failed: %s\n", glErrorFb(status));
 		return 1;
 	}
 
@@ -220,15 +188,7 @@ int main_init(int argc, char *argv[])
 		default:
 			printf("error = %d\n", eError);
 	}
-/*
-	#ifndef __APPLE__
-	if( ! VR_IsInterfaceVersionValid(IVRSystem_Version) )
-	{
-		printf("VR Version error\n");
 
-	}
-#endif
-*/
 	char fnTableName[128];
 	int result1 = sprintf(fnTableName, "FnTable:%s", IVRSystem_Version);
 
@@ -402,7 +362,7 @@ void main_loop(void)
 	}
 	
 	// Process OpenVR Controller			// k_unMaxTrackedDeviceCount = 16
-	for( TrackedDeviceIndex_t unDevice = 0; unDevice < 16; unDevice++)
+	for( TrackedDeviceIndex_t unDevice = 0; unDevice < k_unMaxTrackedDeviceCount; unDevice++)
 	{
 		struct VRControllerState_t state;
 		if( OVR->GetControllerState( unDevice, &state, sizeof(state) ) )
@@ -417,11 +377,11 @@ void main_loop(void)
 	// Process HMD Position
 	if(OVR)
 	{	// UpdateHMDMatrixPose()		// k_unMaxTrackedDeviceCount = 16
-		OVRC->WaitGetPoses(m_rTrackedDevicePose, 16, NULL, 0);
+		OVRC->WaitGetPoses(m_rTrackedDevicePose, k_unMaxTrackedDeviceCount, NULL, 0);
 		m_iValidPoseCount = 0;
 		m_strPoseClasses[0] = 0;
 			
-		for(int nDevice = 0; nDevice < 16; nDevice++)
+		for(int nDevice = 0; nDevice < k_unMaxTrackedDeviceCount; nDevice++)
 		if(m_rTrackedDevicePose[nDevice].bPoseIsValid)
 		{
 			m_iValidPoseCount++;

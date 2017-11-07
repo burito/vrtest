@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "openvr_capi.h": "c"
+        "openvr_capi.h": "c",
+        "glew.h": "c"
     }
 }
