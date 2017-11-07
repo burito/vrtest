@@ -43,7 +43,7 @@ default: gui.app
 else
 # this entry is for building windows binaries on windows, with mingw64 or clang
 # WCC = gcc
-WCC = clang -target x86_64-w64-windows-gnu
+WCC = clang -target x86_64-pc-windows-gnu
 WINDRES = windres
 default: gui.exe
 endif 
