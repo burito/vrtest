@@ -11,6 +11,7 @@ gui.bin
 gui.app
 build
 openvr_api.dll
+*.xcodeproj
 
 # trash
 .*.swp
