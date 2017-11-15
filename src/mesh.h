@@ -57,7 +57,7 @@ typedef struct WF_OBJ
 	char *filename;
 	char **groups;
 	int *sgroups;
-	GLuint vbo, ebo;
+	GLuint va, ab, eb;
 	void (*draw)(struct WF_OBJ*);
 } WF_OBJ;
 

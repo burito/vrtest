@@ -84,6 +84,8 @@ float eye_right[16];
 WF_OBJ * bunny;
 IMG * img;
 GLSLSHADER *shader;
+GLSLSHADER *eye_prog;
+GLuint eye_VAO, eye_VBO, eye_EAB;
 
 
 void ConvertSteamVRMatrixToMatrix4(const struct HmdMatrix34_t in, float * out)
@@ -234,6 +236,54 @@ int main_init(int argc, char *argv[])
 		"data/shaders/vertex.shader",
 		"data/shaders/fragment.shader" );
 	shader_uniform(shader, "matrix");
+
+
+	eye_prog = shader_load(
+		"data/shaders/window.vert",
+		"data/shaders/window.frag" );
+
+	float eye_verts[] = {
+		// left eye
+		-0.9f, -0.9f, 0.0f, 0.0f,
+		0.0f, -0.9f, 1.0f, 0.0f,
+		0.0f, 0.9f, 1.0f, 1.0f,
+		-0.9f, 0.9f, 0.0f, 1.0f,
+		// right eye
+		0.1f, -0.9f, 0.0f, 0.0f,
+		0.9f, -0.9f, 1.0f, 0.0f,
+		0.9f, 0.9f, 1.0f, 1.0f,
+		0.1f, 0.9f, 0.0f, 1.0f
+	};
+
+	GLushort eye_ind[]  = { 0, 1, 2,   0, 2, 3,   4, 5, 6,   4, 6, 7};
+
+	glGenVertexArrays( 1, &eye_VAO );
+	glBindVertexArray( eye_VAO );
+
+
+	glGenBuffers( 1, &eye_VBO );
+	glBindBuffer( GL_ARRAY_BUFFER, eye_VBO );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(eye_verts), &eye_verts[0], GL_STATIC_DRAW );
+
+	glGenBuffers( 1, &eye_EAB );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, eye_EAB );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(eye_ind), &eye_ind[0], GL_STATIC_DRAW );
+
+	glEnableVertexAttribArray( 0 );
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 16, (void *)0 );
+
+	glEnableVertexAttribArray( 1 );
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 16, (void *)8 );
+
+	glBindVertexArray( 0 );
+
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
 
 	return 0;   // it worked!
 }
@@ -487,12 +537,13 @@ void main_loop(void)
 		cErr = OVRC->Submit(EVREye_Eye_Right, &rightEyeTexture, &pBounds, EVRSubmitFlags_Submit_Default);
 		
 	}
-	
 
-	
 
 	glDisable(GL_DEPTH_TEST);
 	glViewport( 0, 0, vid_width, vid_height );
+
+	glBindVertexArray( eye_VAO );
+	glUseProgram( eye_prog->prog );
 
 	// render left eye (first half of index array )
 	glBindTexture(GL_TEXTURE_2D, leftEyeDesc.m_nResolveTextureId );
@@ -500,31 +551,19 @@ void main_loop(void)
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	//glRectf(-0.5f,-0.5f,0.0f,0.0f);
-/*	glEnable(GL_TEXTURE_2D);
-//	glBegin(GL_POLYGON); 
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(-0.9f, -0.9f);
-	glTexCoord2f(1.0f, 0.0f);
-	glVertex2f( 0.0f, -0.9f); 
-	glTexCoord2f(1.0f, 1.0f);
-	glVertex2f( 0.0f,  0.9f);
-	glTexCoord2f(0.0f, 1.0f);
-	glVertex2f(-0.9f,  0.9f); 
-	glEnd( );
-*/
-	glBindTexture(GL_TEXTURE_2D, rightEyeDesc.m_nResolveTextureId );
-/*	glBegin(GL_POLYGON); 
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(0.1f, -0.9f);
-	glTexCoord2f(1.0f, 0.0f);
-	glVertex2f( 0.9f, -0.9f); 
-	glTexCoord2f(1.0f, 1.0f);
-	glVertex2f( 0.9f,  0.9f);
-	glTexCoord2f(0.0f, 1.0f);
-	glVertex2f(0.1f,  0.9f); 
-	glEnd( );	
-*/
+	glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0 );
+
+	// render right eye (second half of index array )
+	glBindTexture(GL_TEXTURE_2D, rightEyeDesc.m_nResolveTextureId  );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (const void *)(uintptr_t)(12) );
+
+	glBindVertexArray( 0 );
+	glUseProgram( 0 );
+
 	glDisable(GL_TEXTURE_2D);
 	glDisable( GL_MULTISAMPLE );
 
