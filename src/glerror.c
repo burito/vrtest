@@ -42,10 +42,12 @@ char* glError(int error)
 			return "GL_INVALID_VALUE";
 		case GL_INVALID_OPERATION:		// 0x0502
 			return "GL_INVALID_OPERATION";
+#ifndef __APPLE__
 		case GL_STACK_OVERFLOW: 		// 0x0503
 			return "GL_STACK_OVERFLOW";
 		case GL_STACK_UNDERFLOW:	 	// 0x0504
 			return "GL_STACK_UNDERFLOW";
+#endif
 		case GL_OUT_OF_MEMORY:			// 0x0505
 			return "GL_OUT_OF_MEMORY";
 		case GL_INVALID_FRAMEBUFFER_OPERATION:	// 0x0506
