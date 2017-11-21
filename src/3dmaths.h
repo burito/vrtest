@@ -32,17 +32,6 @@ freely, subject to the following restrictions:
 #define strtof(x,y) atof(x)
 #endif
 
-typedef struct float2
-{
-	float x;
-	float y;
-} float2;
-
-typedef struct float3 {
-	float x;
-	float y;
-	float z;
-} float3;
 
 typedef struct float4 {
 	float x;
@@ -63,58 +52,99 @@ typedef struct byte4 {
 	unsigned char x,y,z,w;
 } byte4;
 
-#define F2COPY(D,S) D.x=S.x;D.y=S.y
-#define F2ADD(D,A,B) D.x=A.x+B.x;D.y=A.y+B.y
 
 #define F2MAG(X) X.x*X.x+X.y*X.y
 #define F3MAG(X) X.x*X.x+X.y*X.y+X.z*X.z
-
-#define F3COPY(D,S) D.x=S.x;D.y=S.y;D.z=S.z
-#define F3ADD(D,A,B) D.x=A.x+B.x;D.y=A.y+B.y;D.z=A.z+B.z
-#define F3ADDS(D,A,B) D.x=A.x+B;D.y=A.y+B;D.z=A.z+B
-#define F3SUB(D,A,B) D.x=A.x-B.x;D.y=A.y-B.y;D.z=A.z-B.z
-#define F3SUBS(D,A,B) D.x=A.x-B;D.y=A.y-B;D.z=A.z-B
-#define F3SSUB(D,B,A) D.x=B-A.x;D.y=B-A.y;D.z=B-A.z
-#define F3MUL(D,A,B) D.x=A.x*B.x;D.y=A.y*B.y;D.z=A.z*B.z
-#define F3MULS(D,A,B) D.x=A.x*B;D.y=A.y*B;D.z=A.z*B
-#define F3DIV(D,A,B) D.x=A.x/B.x;D.y=A.y/B.y;D.z=A.z/B.z
 #define F3MAX(D) ((D.x>=D.y && D.x>=D.z)?D.x:(D.y>=D.z?D.y:D.z))
 
-#define F4COPY(D,S) D.x=S.x;D.y=S.y;D.z=S.z;D.w=S.w
 
 float finvsqrt(float x);
-void vect_sdivide(float3 *result, const float3 *vect, const float scalar);
-void vect_madd(float3 *result, const float scalar,
-		const float3 *left, const float3 *right);
-void vect_smul(float3 *result, const float3 *left, const float right);
-void vect_mul(float3 *result, const float3 *left, const float3 *right);
-void vect_add(float3 *result, const float3 *left, const float3 *right);
-void vect_sadd(float3 *result, const float3 *left, const float right);
-void vect_sub(float3 *result, const float3 *left, const float3 *right);
-float vect_magnitude(const float3 *vect);
-void vect_norm(float3 *result, const float3 *vect);
-float vect_dot(const float3 *left, const float3 *right);
-void vect_cross(float3 *result, const float3 *left, const float3 *right);
 
-void quat_add(float4* result, float4* a, float4 *b);
-void quat_mul(float4* result, float4* a, float4* b);
-void quat_smul(float4* result, float4* q, float s);
-float quat_mag(float4* q);
-int quat_norm(float4* q);
-void quat_rotx(float4* q, float x);
-//void quat_rot(float3 *result, quat *a, float3 *b);
-void quat_rot(float3 *result, float3 *a, float4 *b);
-void quat_nlerp(float4* result, float4* left, float4* right, float t);
-float quat_dot(float4 *left, float4 *right);
-void quat_slerp(float4* result, float4* left, float4* right, float t);
+typedef union {
+	struct { float x, y; };
+	float f[2];
+ } coord;
 
-void mat_mul(float ret[16], const float left[16], const float right[16]);
-void mat_identity(float ret[16]);
-void mat_trans(float ret[16], const float x, const float y, const float z);
-void mat_rotX(float ret[16], const float theta);
-void mat_rotY(float ret[16], const float theta);
-void mat_rotZ(float ret[16], const float theta);
+typedef union {
+	struct { float x, y, z; };
+	struct { coord xy; float fz; };
+	struct { float fx; coord yz; };
+	float f[3];
+ } vect;
 
-void invert4x4(const float * src, float * dst);
+typedef union {
+	float f[16];
+	float m[4][4];
+} mat4x4;
+
+
+mat4x4 mat4x4_invert(mat4x4 m);
+mat4x4 mat4x4_transpose(mat4x4 m);
+mat4x4 mat4x4_identity(void);
+mat4x4 mat4x4_rot_x(float t);
+mat4x4 mat4x4_rot_y(float t);
+mat4x4 mat4x4_rot_z(float t);
+mat4x4 mat4x4_translate(vect v);
+mat4x4 mat4x4_translate_float(float x, float y, float z);
+
+vect vect_norm(vect v);
+float vect_dot(vect l, vect r);
+vect vect_cross(vect l, vect r);
+
+
+/*
+The following functions are to be called via the 
+_Generic() macro's mul(), add() and sub()
+*/
+
+mat4x4 mat4x4_mul_mat4x4(mat4x4 l, mat4x4 r);
+vect mat4x4_mul_vect(mat4x4 l, vect r);
+mat4x4 mat4x4_add_mat4x4(mat4x4 l, mat4x4 r);
+mat4x4 mat4x4_sub_mat4x4(mat4x4 l, mat4x4 r);
+
+vect vect_mul_vect(vect l, vect r);
+vect vect_mul_float(vect l, float r);
+vect vect_add_vect(vect l, vect r);
+vect vect_add_float(vect l, float r);
+vect vect_sub_vect(vect l, vect r);
+
+float float_mul(float l, float r);
+float float_add(float l, float r);
+float float_sub_float(float l, float r);
+vect float_sub_vect(float l, vect r);
+
+int int_mul(int l, int r);
+int int_add(int l, int r);
+int int_sub(int l, int r);
+
+
+#define mul(X,Y) _Generic(X, \
+	mat4x4: _Generic(Y, \
+		mat4x4: mat4x4_mul_mat4x4, \
+		default: mat4x4_mul_vect), \
+	vect: _Generic(Y, \
+		vect: vect_mul_vect,	\
+		default: vect_mul_float), \
+	float: float_mul, \
+	default: int_mul \
+	)(X,Y)
+
+#define add(X,Y) _Generic(X, \
+	mat4x4: mat4x4_add_mat4x4, \
+	vect: _Generic(Y, \
+		vect: vect_add_vect, \
+		default:vect_add_float), \
+	float: float_add, \
+	default: int_add \
+	)(X,Y)
+
+#define sub(X,Y) _Generic(X, \
+	mat4x4: mat4x4_sub_mat4x4, \
+	vect: vect_sub_vect,	\
+	float: _Generic(Y, \
+		vect: float_sub_vect, \
+		default:float_sub_float), \
+	default: int_sub \
+	)(X,Y)
 
 #endif /* __3DMATHS_H_ */

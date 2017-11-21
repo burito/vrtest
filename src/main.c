@@ -56,7 +56,7 @@ const char * VR_GetVRInitErrorAsEnglishDescription( EVRInitError error );
 struct VR_IVRSystem_FnTable * OVR = NULL;
 struct VR_IVRCompositor_FnTable * OVRC; 
 // k_unMaxTrackedDeviceCount = 16
-TrackedDevicePose_t m_rTrackedDevicePose [k_unMaxTrackedDeviceCount];
+TrackedDevicePose_t m_rTrackedDevicePose [16];
 
 struct FramebufferDesc
 {
@@ -74,12 +74,12 @@ bool CreateFrameBuffer( int nWidth, int nHeight, struct FramebufferDesc *framebu
 uint32_t m_nRenderWidth;
 uint32_t m_nRenderHeight;
 int m_iValidPoseCount;
-char m_strPoseClasses[k_unMaxTrackedDeviceCount+1]; // should never get above 16 = k_unMaxTrackedDeviceCount
-char m_rDevClassChar[k_unMaxTrackedDeviceCount+1];
-float m_rmat4DevicePose[k_unMaxTrackedDeviceCount][16]; // first 16 is k_unMax, second is 4x4 matrix
-float hmdPose[16];
-float eye_left[16];
-float eye_right[16];
+char m_strPoseClasses[16+1]; // should never get above 16 = k_unMaxTrackedDeviceCount
+char m_rDevClassChar[16+1];
+float m_rmat4DevicePose[16][16]; // first 16 is k_unMax, second is 4x4 matrix
+mat4x4 hmdPose;
+mat4x4 eye_left;
+mat4x4 eye_right;
 
 WF_OBJ * bunny;
 IMG * img;
@@ -283,8 +283,6 @@ int main_init(int argc, char *argv[])
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-
-
 	return 0;   // it worked!
 }
 
@@ -295,45 +293,23 @@ void main_end(void)
 
 }
 
-void hmd_eye_calc(EVREye eye, float * dest)
+void hmd_eye_calc(EVREye eye, mat4x4 * dest)
 {
 	float near = 0.1f;
 	float far = 30.0f;
 
-	// HmdMatrix44_t.m = float[4][4]
-	// may be column major?
 	struct HmdMatrix44_t matP = OVR->GetProjectionMatrix( eye, near, far );
+			// they're the same struct, trust me!
+	mat4x4 proj = mat4x4_transpose( *((mat4x4*)((void*)&matP)) );
 	struct HmdMatrix34_t matT = OVR->GetEyeToHeadTransform( eye );
-	// invert matT
-	float tmp[16] = {
+	mat4x4 pos = {
 		matT.m[0][0], matT.m[1][0], matT.m[2][0], 0.0f,	
 		matT.m[0][1], matT.m[1][1], matT.m[2][1], 0.0f,	
 		matT.m[0][2], matT.m[1][2], matT.m[2][2], 0.0f,	
 		matT.m[0][3], matT.m[1][3], matT.m[2][3], 1.0f,	
 	};
-
-
-//	memcpy(tmp, (float*)matT.m, sizeof(matT));
-
-
-	float out[16];
-	invert4x4(tmp, out);
-
-	float tmpP[16] = {
-		matP.m[0][0], matP.m[1][0], matP.m[2][0], matP.m[3][0],
-		matP.m[0][1], matP.m[1][1], matP.m[2][1], matP.m[3][1],
-		matP.m[0][2], matP.m[1][2], matP.m[2][2], matP.m[3][2],
-		matP.m[0][3], matP.m[1][3], matP.m[2][3], matP.m[3][3]
-	};
-
-	float mB[16];
-	
-
-	mat_mul(mB, out, hmdPose);
-	
-	mat_mul(dest, tmpP, mB);
-//	mat_mul(dest, tmp, mOut);
-	
+	pos = mat4x4_invert(pos);
+	*dest = mul(proj, mul(pos, hmdPose));
 }
 
 
@@ -343,33 +319,24 @@ void GetHMDMatrices(void)
 
 	// EVREye_Eye_Left
 	// EVREye_Eye_Right
-	hmd_eye_calc(EVREye_Eye_Left, eye_left);
-	hmd_eye_calc(EVREye_Eye_Right, eye_right);
+	hmd_eye_calc(EVREye_Eye_Left, &eye_left);
+	hmd_eye_calc(EVREye_Eye_Right, &eye_right);
 }
 
-void render(float * matrix)
+void render(mat4x4 * matrix)
 {
 	glUseProgram(shader->prog);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glDepthRangef( 0.1f, 30.0f);
 
-	float trans[16];
-	float tmp[16];
+	mat4x4 m;
+	m = mat4x4_rot_y(step);		// rotate the bunny
+	m = mul(m, mat4x4_translate_float(-0.5, 0, -0.5)); // around it's own origin
+	m = mul(mat4x4_translate_float( 0, 0, -2), m);	// move it 2 metres infront of the camera
+	m = mul( *matrix, m);
 
-	float ident[16];
-	float mA[16];
-	float mB[16];
-	float mC[16];
-	float mOut[16];
-	
-	mat_identity(ident);
-	mat_trans(mA, 0.0f, 0.0f, -step);
-
-	mat_mul(mOut, matrix, mA);
-
-
-	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, mOut);
+	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
 	bunny->draw(bunny);
 	glUseProgram(0);
 }
@@ -378,8 +345,8 @@ void render(float * matrix)
 void main_loop(void)
 {
 	
-	if(step > 4.0f)
-		step = 0.0f;
+	if(step > 2*M_PI)
+		step -= 2*M_PI;
 	else
 		step += 0.01;
 
@@ -411,7 +378,7 @@ void main_loop(void)
 	}
 	
 	// Process OpenVR Controller			// k_unMaxTrackedDeviceCount = 16
-	for( TrackedDeviceIndex_t unDevice = 0; unDevice < k_unMaxTrackedDeviceCount; unDevice++)
+	for( TrackedDeviceIndex_t unDevice = 0; unDevice < 16; unDevice++)
 	{
 		struct VRControllerState_t state;
 		if( OVR->GetControllerState( unDevice, &state, sizeof(state) ) )
@@ -426,11 +393,11 @@ void main_loop(void)
 	// Process HMD Position
 	if(OVR)
 	{	// UpdateHMDMatrixPose()		// k_unMaxTrackedDeviceCount = 16
-		OVRC->WaitGetPoses(m_rTrackedDevicePose, k_unMaxTrackedDeviceCount, NULL, 0);
+		OVRC->WaitGetPoses(m_rTrackedDevicePose, 16, NULL, 0);
 		m_iValidPoseCount = 0;
 		m_strPoseClasses[0] = 0;
 			
-		for(int nDevice = 0; nDevice < k_unMaxTrackedDeviceCount; nDevice++)
+		for(int nDevice = 0; nDevice < 16; nDevice++)
 		if(m_rTrackedDevicePose[nDevice].bPoseIsValid)
 		{
 			m_iValidPoseCount++;
@@ -452,16 +419,9 @@ void main_loop(void)
 
 		if ( m_rTrackedDevicePose[k_unTrackedDeviceIndex_Hmd].bPoseIsValid )
 		{
-			float m[4][4];
-			memcpy(m, m_rmat4DevicePose[k_unTrackedDeviceIndex_Hmd], sizeof(m));
-	/*		
-			float tmp[16] = {
-				m[0][0], m[1][0], m[2][0], m[3][0],
-				m[0][1], m[1][1], m[2][1], m[3][1],
-				m[0][2], m[1][2], m[2][2], m[3][2],
-				m[0][3], m[1][3], m[2][3], m[3][3]
-			};			
-	*/		invert4x4((const float *)m, hmdPose);
+			mat4x4 m;
+			memcpy(m.f, m_rmat4DevicePose[k_unTrackedDeviceIndex_Hmd], sizeof(m));
+			hmdPose = mat4x4_invert(m);
 		}
 		// Get hmd position matrices
 
@@ -480,7 +440,7 @@ void main_loop(void)
 
 		// render scene
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		render(eye_left);
+		render(&eye_left);
 		//render finish
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 		glDisable( GL_MULTISAMPLE );
@@ -501,7 +461,7 @@ void main_loop(void)
 		glViewport(0, 0, m_nRenderWidth, m_nRenderHeight );
 		// render scene
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		render(eye_right);
+		render(&eye_right);
 		
 		// render finish
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );

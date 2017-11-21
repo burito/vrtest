@@ -59,7 +59,8 @@
             "includePath": [
                 "C:/Program Files/mingw-w64/x86_64-7.2.0-posix-seh-rt_v5-rev0/mingw64/x86_64-w64-mingw32/include",
                 "C:/Program Files/mingw-w64/x86_64-7.2.0-posix-seh-rt_v5-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/7.2.0/include",
-                "${workspaceRoot}/src"
+                "${workspaceRoot}/src",
+                "${workspaceRoot}/src/openvr"
             ],
             "defines": [
                 "_DEBUG",
@@ -68,7 +69,7 @@
             "intelliSenseMode": "msvc-x64",
             "browse": {
                 "path": [
-                   "C:/Program Files/mingw-w64/x86_64-7.2.0-posix-seh-rt_v5-rev0/mingw64/x86_64-w64-mingw32/include/*",
+                    "C:/Program Files/mingw-w64/x86_64-7.2.0-posix-seh-rt_v5-rev0/mingw64/x86_64-w64-mingw32/include/*",
                     "${workspaceRoot}/src"
                 ],
                 "limitSymbolsToIncludedHeaders": true,

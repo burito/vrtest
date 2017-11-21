@@ -21,6 +21,10 @@ freely, subject to the following restrictions:
    distribution.
 */
 
+
+#include "invert4x4_sse.h"
+
+
 #include <math.h>
 
 #include "3dmaths.h"
@@ -40,157 +44,225 @@ float finvsqrt(float x)
 	return x;
 }
 
-/*
- * Vector manipulation functions
- */
 
-void vect_sdivide(float3 *result, const float3 *vect, const float scalar)
+
+mat4x4 mat4x4_invert(mat4x4 m)
 {
-	result->x = vect->x / scalar;
-	result->y = vect->y / scalar;
-	result->z = vect->z / scalar;
+	mat4x4 x;
+	invert4x4(m.f, x.f);
+	return x;
+}
+
+mat4x4 mat4x4_transpose(mat4x4 m)
+{
+	mat4x4 x = {
+	m.m[0][0], m.m[1][0], m.m[2][0], m.m[3][0],
+	m.m[0][1], m.m[1][1], m.m[2][1], m.m[3][1],
+	m.m[0][2], m.m[1][2], m.m[2][2], m.m[3][2],
+	m.m[0][3], m.m[1][3], m.m[2][3], m.m[3][3]
+	};
+	return x;
+};
+
+mat4x4 mat4x4_identity(void)
+{
+	mat4x4 a = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	};
+	return a;
+}
+
+mat4x4 mat4x4_rot_x(float t)
+{
+	mat4x4 a = {
+		1,       0,      0, 0,
+		0,  cos(t), sin(t), 0,
+		0, -sin(t), cos(t), 0,
+		0,       0,      0, 1
+	};
+	return a;
+}
+
+mat4x4 mat4x4_rot_y(float t)
+{
+	mat4x4 a = {
+		cos(t), 0, -sin(t), 0,
+		     0, 1,       0, 0,
+		sin(t), 0,  cos(t), 0,
+		     0, 0,       0, 1
+	};
+	return a;
+}
+
+mat4x4 mat4x4_rot_z(float t)
+{
+	mat4x4 a = {
+		 cos(t), sin(t), 0, 0,
+		-sin(t), cos(t), 0, 0,
+		      0,      0, 1, 0,
+		      0,      0, 0, 1
+	};
+	return a;
+}
+
+mat4x4 mat4x4_translate_vect(vect v)
+{
+	mat4x4 a = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		v.x, v.y, v.z, 1
+	};
+	return a;
+}
+
+mat4x4 mat4x4_translate_float(float x, float y, float z)
+{
+	vect a = {x, y, z};
+	return mat4x4_translate_vect(a);
 }
 
 
-void vect_madd(float3 *result, const float scalar,
-		const float3 *left, const float3 *right)
+vect vect_norm(vect v)
 {
-	result->x = scalar * left->x + right->x;
-	result->y = scalar * left->y + right->y;
-	result->z = scalar * left->z + right->z;
-}
-
-
-void vect_smul(float3 *result, const float3 *left, const float right)
-{
-	result->x = left->x * right;
-	result->y = left->y * right;
-	result->z = left->z * right;
-}
-
-
-void vect_mul(float3 *result, const float3 *left, const float3 *right)
-{
-	result->x = left->x * right->x;
-	result->y = left->y * right->y;
-	result->z = left->z * right->z;
-}
-
-
-void vect_add(float3 *result, const float3 *left, const float3 *right)
-{
-	result->x = left->x + right->x;
-	result->y = left->y + right->y;
-	result->z = left->z + right->z;
-}
-
-
-void vect_sadd(float3 *result, const float3 *left, const float right)
-{
-	result->x = left->x + right;
-	result->y = left->y + right;
-	result->z = left->z + right;
-}
-
-
-void vect_sub(float3 *result, const float3 *left, const float3 *right)
-{
-	result->x = left->x - right->x;
-	result->y = left->y - right->y;
-	result->z = left->z - right->z;
-}
-
-
-float vect_magnitude(const float3 *vect)
-{
-	return vect->x * vect->x + vect->y * vect->y + vect->z * vect->z;
-}
-
-
-void vect_norm(float3 * result, const float3 *vect)
-{
-	float len = sqrt(vect_magnitude(vect));
+	vect x;
+	float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 	float scale = 1.0f / len;
-	result->x = vect->x * scale;
-	result->y = vect->y * scale;
-	result->z = vect->z * scale;
+	return mul(v,scale);
 }
-
 
 /* inner product (dot product) of two vectors */
-float vect_dot(const float3 *left, const float3 *right)
+float vect_dot(vect l, vect r)
 {
-	return left->x * right->x + left->y * right->y + left->z * right->z;
+	return l.x * r.x + l.y * r.y + l.z * r.z;
 }
-
 
 /* outer product (cross product) of two vectors */
-void vect_cross(float3 *result, const float3 *left, const float3 *right)
+vect vect_cross(vect l, vect r)
 {
-	result->x = left->y * right->z - left->z * right->y;
-	result->y = left->z * right->x - left->x * right->z;
-	result->z = left->x * right->y - left->y * right->x;
+	vect x;
+	x.x = l.y * r.z - l.z * r.y;
+	x.y = l.z * r.x - l.x * r.z;
+	x.z = l.x * r.y - l.y * r.x;
+	return x;
 }
-
 
 /*
- * Matrix functions
- */
+The following functions are to be called via the 
+_Generic() macro's mul(), add() and sub()
+*/
 
-void mat_mul(float ret[16], const float left[16], const float right[16])
+mat4x4 mat4x4_mul_mat4x4(mat4x4 l, mat4x4 r)
 {
-	for (unsigned int i = 0; i < 16; i += 4)
-	for (unsigned int j = 0; j < 4; ++j)
-		ret[i + j] = (right[i + 0] * left[j +  0])
-			+ (right[i + 1] * left[j +  4])
-			+ (right[i + 2] * left[j +  8])
-			+ (right[i + 3] * left[j + 12]);
+	mat4x4 ret;
+	for(int y=0; y<4; y++)
+	for(int x=0; x<4; x++)
+		ret.m[y][x] =
+			r.m[y][0] * l.m[0][x] +
+			r.m[y][1] * l.m[1][x] +
+			r.m[y][2] * l.m[2][x] +
+			r.m[y][3] * l.m[3][x];
+	return ret;
+}
+
+vect mat4x4_mul_vect(mat4x4 l, vect r)
+{
+	vect x;
+	for (int i = 0; i < 3; i++)
+	{
+		x.f[i] = l.m[i][0]*r.x + l.m[i][1]*r.y + l.m[i][2]*r.z + l.m[i][3];
+	}
+	return x;
+}
+
+mat4x4 mat4x4_add_mat4x4(mat4x4 l, mat4x4 r)
+{
+	mat4x4 x;
+	for(int i=0; i<16; i++)
+		x.f[i] = l.f[i] + r.f[i];
+	return x;
+}
+
+mat4x4 mat4x4_sub_mat4x4(mat4x4 l, mat4x4 r)
+{
+	mat4x4 x;
+	for(int i=0; i<16; i++)
+		x.f[i] = l.f[i] - r.f[i];
+	return x;
 }
 
 
-void mat_identity(float ret[16])
+vect vect_mul_vect(vect l, vect r)
 {
-	ret[0*4+0] = 1.0f; ret[1*4+0] = 0.0f; ret[2*4+0] = 0.0f; ret[3*4+0] = 0.0f;
-	ret[0*4+1] = 0.0f; ret[1*4+1] = 1.0f; ret[2*4+1] = 0.0f; ret[3*4+1] = 0.0f;
-	ret[0*4+2] = 0.0f; ret[1*4+2] = 0.0f; ret[2*4+2] = 1.0f; ret[3*4+2] = 0.0f;
-	ret[0*4+3] = 0.0f; ret[1*4+3] = 0.0f; ret[2*4+3] = 0.0f; ret[3*4+3] = 1.0f;
+	vect x;
+	x.x = l.x * r.x;
+	x.y = l.y * r.y;
+	x.z = l.z * r.z;
+	return x;
+}
+
+vect vect_add_vect(vect l, vect r)
+{
+	vect x = { l.x + r.x, l.y + r.y, l.z + r.z };
+	return x;
+}
+
+vect vect_add_float(vect l, float r)
+{
+	vect x = { l.x + r, l.y + r, l.z + r };
+	return x;
+}
+
+vect vect_sub_vect(vect l, vect r)
+{
+	vect x = { l.x - r.x, l.y - r.y, l.z - r.z };
+	return x;
+}
+
+vect vect_mul_float(vect l, float r)
+{
+	vect a = {l.x*r, l.y*r, l.z*r};
+	return a;
 }
 
 
-void mat_trans(float ret[16], const float x, const float y, const float z)
+int int_mul(int l, int r)
 {
-	ret[0*4+0] = 1.0f; ret[1*4+0] = 0.0f; ret[2*4+0] = 0.0f; ret[3*4+0] = x;
-	ret[0*4+1] = 0.0f; ret[1*4+1] = 1.0f; ret[2*4+1] = 0.0f; ret[3*4+1] = y;
-	ret[0*4+2] = 0.0f; ret[1*4+2] = 0.0f; ret[2*4+2] = 1.0f; ret[3*4+2] = z;
-	ret[0*4+3] = 0.0f; ret[1*4+3] = 0.0f; ret[2*4+3] = 0.0f; ret[3*4+3] = 1.0f;
+	return l * r;
+}
+
+int int_add(int l, int r)
+{
+	return l + r;
+}
+
+int int_sub(int l, int r)
+{
+	return l - r;
 }
 
 
-void mat_rotX(float ret[16], float theta)
+float float_mul(float l, float r)
 {
-	ret[0*4+0] = 1.0f; ret[1*4+0] = 0.0f; ret[2*4+0] = 0.0f; ret[3*4+0] = 0.0f;
-	ret[0*4+1] = 0.0f; ret[1*4+1] = cos(theta); ret[2*4+1] = -sin(theta); ret[3*4+1] = 0.0f;
-	ret[0*4+2] = 0.0f; ret[1*4+2] = sin(theta); ret[2*4+2] = cos(theta); ret[3*4+2] = 0.0f;
-	ret[0*4+3] = 0.0f; ret[1*4+3] = 0.0f; ret[2*4+3] = 0.0f; ret[3*4+3] = 1.0f;
+	return l * r;
 }
 
-
-void mat_rotY(float ret[16], float theta)
+float float_add(float l, float r)
 {
-	ret[0*4+0] = cos(theta); ret[1*4+0] = 0.0f; ret[2*4+0] = sin(theta); ret[3*4+0] = 0.0f;
-	ret[0*4+1] = 0.0f; ret[1*4+1] = 1.0f; ret[2*4+1] = 0.0f; ret[3*4+1] = 0.0f;
-	ret[0*4+2] = -sin(theta); ret[1*4+2] = 0.0f; ret[2*4+2] = cos(theta); ret[3*4+2] = 0.0f;
-	ret[0*4+3] = 0.0f; ret[1*4+3] = 0.0f; ret[2*4+3] = 0.0f; ret[3*4+3] = 1.0f;
+	return l + r;
 }
 
-
-void mat_rotZ(float ret[16], float theta)
+float float_sub_float(float l, float r)
 {
-	ret[0*4+0] = cos(theta); ret[1*4+0] = -sin(theta); ret[2*4+0] = 0.0f; ret[3*4+0] = 0.0f;
-	ret[0*4+1] = sin(theta); ret[1*4+1] = cos(theta); ret[2*4+1] = 0.0f; ret[3*4+1] = 0.0f;
-	ret[0*4+2] = 0.0f; ret[1*4+2] = 0.0f; ret[2*4+2] = 1.0f; ret[3*4+2] = 0.0f;
-	ret[0*4+3] = 0.0f; ret[1*4+3] = 0.0f; ret[2*4+3] = 0.0f; ret[3*4+3] = 1.0f;
+	return l - r;
 }
 
-// https://github.com/niswegmann/small-matrix-inverse
-#include "invert4x4_sse.h"
+vect float_sub_vect(float l, vect r)
+{
+	vect x = { l - r.x, l - r.y, l - r.z};
+	return x;
+}
+

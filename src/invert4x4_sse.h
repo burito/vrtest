@@ -7,7 +7,7 @@
 
 #include <xmmintrin.h>
 
-inline void invert4x4(const float * src, float * dst)
+void invert4x4(const float * src, float * dst)
 {
     __m128 minor0, minor1, minor2, minor3;
     __m128 row0, row1, row2, row3;
