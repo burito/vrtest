@@ -32,7 +32,9 @@ It's not correctly packaged, ie it needs to be run from this directory so that i
 Current Status
 --------------
 On Windows, it works perfectly.
+
 On Linux, it appears to be stuck at 60fps. The Steam Home app doesn't have this issue. There are also some tracking fails, which seems to be a feature of the Linux VR Experience at the moment. After it's been running for a few minutes they disappear completely, so my guess is linux power management is a bit trigger happy?
+
 On Mac, it runs really horribly. I've tried using a very low poly model to mitigate the low powered hardware I have, and it has no effect. My test machine is a MacBookPro mid-2014, w/ a 750m. It claims to be compatible with HDMI 1.4, which is what the HTC Vive requires. On the monitor it runs flawlessly, on the Vive, there are some really bad, what I'm calling frame re-use issues. My best guess is the MacBookPro's HDMI 1.4 support is questionable. The Official OpenVR sample program has the same behaviour. I have a Mini DisplayPort to Mini DisplayPort cable on the way, hopefully this will solve it. There's also some odd behaviour with OpenVR initialisation calls yeilding execution, which I wasn't aware was possible, but I'm no Objective-C expert, so that could be normal. The work around is to just check the OpenVR pointers before calling them. Sooner or later they get populated as the init function finishes between frames, and it starts working.
 
 Credits
