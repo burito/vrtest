@@ -3,6 +3,7 @@
         "openvr_capi.h": "c",
         "glew.h": "c",
         "invert4x4_sse.h": "c",
-        "3dmaths.h": "c"
+        "3dmaths.h": "c",
+        "*.rh": "c"
     }
 }

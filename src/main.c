@@ -351,7 +351,7 @@ void main_loop(void)
 		step += 0.01;
 
 
-	glEnable(GL_TEXTURE_2D);
+//	glEnable(GL_TEXTURE_2D);
 	
 	glClearColor(0.3f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);

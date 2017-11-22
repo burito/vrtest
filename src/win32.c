@@ -156,11 +156,41 @@ static void sys_input(void)
 }
 
 
+int w32_moving = 0;
+int w32_delta_x = 0;
+int w32_delta_y = 0;
+
 static LONG WINAPI wProc(HWND hWndProc, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	int code;
 	int bit=0;
 	switch(uMsg) {
+	case WM_SYSCOMMAND:
+//		printf("WM_SYSCOMMAND\n");
+		switch(wParam & 0xFFF0) {
+		case SC_SIZE:
+//			printf("SC_SIZE\n");
+			break;
+			return 0;
+		case SC_MOVE:	// Moving the window locks the app, so implement it manually
+			w32_moving = 1;
+			POINT p;
+			GetCursorPos(&p);
+			RECT r;
+			GetWindowRect(hWnd,&r);
+			w32_delta_x = p.x - r.left;
+			w32_delta_y = p.y - r.top;
+			SetCapture(hWnd);
+			return 0;
+		default:
+			break;
+		}
+		break;
+		return 0;
+//	case WM_EXITSIZEMOVE:
+//		printf("WM_EXITSIZEMOVE\n");
+//		return 0;
+
 	case WM_SIZING:
 	case WM_SIZE:
 		vid_width = LOWORD(lParam);
@@ -182,6 +212,11 @@ static LONG WINAPI wProc(HWND hWndProc, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		bit = 1;
 	case WM_LBUTTONUP:
 		mouse[0]=bit;
+		if(w32_moving)
+		{
+			w32_moving = 0;
+			ReleaseCapture();
+		}
 		return 0;
 
 	case WM_MBUTTONDOWN:
@@ -216,6 +251,23 @@ static LONG WINAPI wProc(HWND hWndProc, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		mickey_y += mouse_y - HIWORD(lParam);
 		mouse_x = LOWORD(lParam);
 		mouse_y = HIWORD(lParam);
+		if(w32_moving)
+		{
+			RECT r;
+			int win_width, win_height;
+			GetWindowRect(hWnd,&r);
+			win_height = r.bottom - r.top;
+			win_width = r.right - r.left;
+			POINT p;
+			GetCursorPos(&p);
+			MoveWindow(hWnd, p.x - w32_delta_x,
+					 p.y - w32_delta_y,
+					 win_width, win_height, TRUE);
+		}
+		else
+		{
+
+		}
 		break;
 
 	case WM_SETCURSOR:
