@@ -10,7 +10,8 @@
                 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers",
                 "/usr/include",
                 "${workspaceRoot}",
-                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/usr/include"
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/usr/include",
+                "${workspaceRoot}/src/openvr"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
