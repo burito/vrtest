@@ -90,7 +90,7 @@ void render(mat4x4 matrix)
 	mat4x4 m;
 	m = mat4x4_rot_y(step);		// rotate the bunny
 	m = mul(m, mat4x4_translate_float(-0.5, -0.5, -0.5)); // around it's own origin
-	m = mul(mat4x4_translate_float( 0, 0, 2), m);	// move it 2 metres infront of the camera
+	m = mul(mat4x4_translate_float( 0, 0, -2), m);	// move it 2 metres infront of the camera
 	m = mul( matrix, m);
 
 	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
