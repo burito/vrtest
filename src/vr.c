@@ -229,10 +229,6 @@ void vr_init(void)
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 16, (void *)8 );
 
 	glBindVertexArray( 0 );
-
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
