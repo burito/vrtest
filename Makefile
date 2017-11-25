@@ -55,7 +55,7 @@ $(WDIR)/Icon.ico: $(SDIR)/Icon.png
 $(WDIR)/win32.res: $(SDIR)/win32.rc $(WDIR)/Icon.ico
 	$(WINDRES) -I $(WDIR) -O coff src/win32.rc -o $@
 $(WDIR)/%.o: $(SDIR)/%.c
-	$(WCC) $(CFLAGS) -DWIN32 $(INCLUDES)-c $< -o $@
+	$(WCC) $(CFLAGS) $(INCLUDES)-c $< -o $@
 openvr_api.dll:
 	cp lib/win/openvr_api.dll .
 gui.exe: openvr_api.dll $(WOBJS)
