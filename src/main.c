@@ -61,9 +61,9 @@ int main_init(int argc, char *argv[])
 
 	bunny = wf_load("data/stanford-bunny.obj");
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glDepthRangef( 0.1f, 30.0f);
+//	glEnable(GL_DEPTH_TEST);
+//	glDepthFunc(GL_LESS);
+//	glDepthRangef( 0.1f, 30.0f);
 
 	shader = shader_load(
 		"data/shaders/vertex.shader",
@@ -89,8 +89,8 @@ void render(mat4x4 matrix)
 
 	mat4x4 m;
 	m = mat4x4_rot_y(step);		// rotate the bunny
-	m = mul(m, mat4x4_translate_float(-0.5, 0, -0.5)); // around it's own origin
-	m = mul(mat4x4_translate_float( 0, 0, -2), m);	// move it 2 metres infront of the camera
+	m = mul(m, mat4x4_translate_float(-0.5, -0.5, -0.5)); // around it's own origin
+	m = mul(mat4x4_translate_float( 0, 0, 2), m);	// move it 2 metres infront of the camera
 	m = mul( matrix, m);
 
 	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
@@ -114,9 +114,9 @@ void main_loop(void)
 	if(!vr_using)
 	{
 		mat4x4 proj = mat4x4_identity();
-		proj = mat4x4_perspective(1, 30, 1, (float)vid_height / (float)vid_width);
-//		proj = mat4x4_orthographic(1, 30, 1, (float)vid_height / (float)vid_width);
-		mat4x4 camera = mat4x4_translate_float(0, -1, 0); // move the camera 1m above ground
+//		proj = mat4x4_perspective(1, 30, 1, (float)vid_height / (float)vid_width);
+		proj = mat4x4_orthographic(1, 30, 1, (float)vid_height / (float)vid_width);
+		mat4x4 camera = mat4x4_translate_float(0, 0, 0); // move the camera 1m above ground
 		render(mul(proj, camera));
 	}
 	else

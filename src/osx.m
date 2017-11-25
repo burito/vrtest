@@ -30,7 +30,7 @@ freely, subject to the following restrictions:
 #include <IOKit/hid/IOHIDKeys.h>
 //#include <ForceFeedback/ForceFeedback.h>
 
-#include <OpenGL/GL.h>
+#include <OpenGL/gl3.h>
 #include <sys/time.h>
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -22,7 +22,7 @@ freely, subject to the following restrictions:
 */
 
 #ifdef __APPLE__
-#include <OpenGL/gl.h>
+#include <OpenGL/gl3.h>
 #else
 #include <GL/glew.h>
 #endif
@@ -51,14 +51,16 @@ static void img_glinit(IMG *img)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+//	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 
 	switch(img->channels) {
 	case 4: type = GL_RGBA; intfmt = GL_RGBA8; break;
 	case 3: type = GL_RGB; intfmt = GL_RGB8; break;
+#ifndef __APPLE__
 	case 2: type = GL_LUMINANCE_ALPHA; intfmt = GL_LUMINANCE8_ALPHA8; break;
 	case 1: type = GL_LUMINANCE; intfmt = GL_LUMINANCE8; break;
+#endif
 	default: type = GL_NONE;
 	}
 	

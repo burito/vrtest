@@ -21,19 +21,11 @@ freely, subject to the following restrictions:
    distribution.
 */
 
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <GL/glew.h>
-#endif
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <sys/stat.h>
-
 
 
 void tailchomp(char *string)
