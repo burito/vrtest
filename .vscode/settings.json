@@ -4,6 +4,7 @@
         "glew.h": "c",
         "invert4x4_sse.h": "c",
         "3dmaths.h": "c",
-        "*.rh": "c"
+        "*.rh": "c",
+        "text.h": "c"
     }
 }

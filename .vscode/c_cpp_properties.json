@@ -9,8 +9,9 @@
                 "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
                 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers",
                 "/usr/include",
-                "${workspaceRoot}",
                 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/usr/include",
+                "${workspaceRoot}",
+                "${workspaceRoot}/src",
                 "${workspaceRoot}/src/openvr"
             ],
             "defines": [],
@@ -23,8 +24,7 @@
                     "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
                     "/usr/include",
                     "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/usr/include",
-                    "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/OpenGL.framework/Headers",
-                    "${workspaceRoot}"
+                    "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/OpenGL.framework/Headers"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -39,11 +39,11 @@
             "includePath": [
                 "/usr/include",
                 "/usr/local/include",
-                "${workspaceRoot}",
-                "${workspaceRoot}/src/openvr",
-                "${workspaceRoot}/src",
                 "/usr/include/linux",
-                "/usr/lib/llvm-3.8/lib/clang/3.8.0/include"
+                "/usr/lib/llvm-3.8/lib/clang/3.8.0/include",
+                "${workspaceRoot}/src",
+                "${workspaceRoot}/src/openvr"
+ 
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
