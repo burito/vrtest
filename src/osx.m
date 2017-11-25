@@ -177,6 +177,8 @@ static int y_correction = 0;  // to correct mouse position for title bar
 
 }
 
+int first_frame = 1;
+
 #ifdef CVDISPLAYLINK
 // This is the CVDisplayLink callback
 static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
@@ -187,6 +189,12 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 
 	CGLLockContext(context);
 	[glcontext makeCurrentContext];
+	if(first_frame)
+	{
+		first_frame = 0;
+		memset(keys, 0, KEYMAX);
+		main_init(gargc, gargv);
+	}
 	main_loop();
 	[glcontext flushBuffer];
 	CGLUnlockContext(context);
@@ -217,6 +225,12 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 -(void)drawRect:(NSRect)dirtyRect
 {
 	[[self openGLContext] makeCurrentContext];
+	if(first_frame)
+	{
+		first_frame = 0;
+		memset(keys, 0, KEYMAX);
+		main_init(gargc, gargv);
+	}
 	main_loop();
 	[[self openGLContext] flushBuffer];
 //	ff_set();
@@ -341,13 +355,13 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	[window setAcceptsMouseMovedEvents:YES];
 	[window makeFirstResponder:window];
 
-	memset(keys, 0, KEYMAX);
+//	memset(keys, 0, KEYMAX);
 //	memset(joy, 0, sizeof(joystick)*4);
 //	memset(osx_joy, 0, sizeof(osx_joystick)*4);
 
 //	[self setupGamepad];
 
-	main_init(gargc, gargv);
+//	main_init(gargc, gargv);
 
 //	[window toggleFullScreen:(self)];
 }
