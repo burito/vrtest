@@ -125,6 +125,29 @@ mat4x4 mat4x4_translate_float(float x, float y, float z)
 	return mat4x4_translate_vect(a);
 }
 
+// http://www.songho.ca/opengl/gl_projectionmatrix.html#perspective
+mat4x4 mat4x4_perspective(float near, float far, float width, float height)
+{
+	mat4x4 ret = {
+		near/(0.5*width), 0, 0, 0,
+		0, near/(0.5*height), 0, 0,
+		0, 0, (-(far+near))/(far-near), (-2*far*near)/(far-near),
+		0, 0, -1, 0  
+	};
+	return ret;
+}
+// http://www.songho.ca/opengl/gl_projectionmatrix.html#ortho
+mat4x4 mat4x4_orthographic(float near, float far, float width, float height)
+{
+	mat4x4 ret = {
+		1/(0.5*width), 0, 0, 0,
+		0, 1/(0.5*height), 0, 0,
+		0, 0, (-2)/(far-near), -((far*near)/(far-near)),
+		0, 0, 0, 1  
+	};
+	return ret;
+}
+
 
 vect vect_norm(vect v)
 {
@@ -154,6 +177,22 @@ vect vect_cross(vect l, vect r)
 The following functions are to be called via the 
 _Generic() macro's mul(), add() and sub()
 */
+
+mat4x4 mat4x4_mov_HmdMatrix34(HmdMatrix34_t x)
+{
+	mat4x4 r = {
+		x.m[0][0], x.m[1][0], x.m[2][0], 0.0f,	
+		x.m[0][1], x.m[1][1], x.m[2][1], 0.0f,	
+		x.m[0][2], x.m[1][2], x.m[2][2], 0.0f,	
+		x.m[0][3], x.m[1][3], x.m[2][3], 1.0f,	
+	};
+	return mat4x4_invert(r);
+}
+
+mat4x4 mat4x4_mov_HmdMatrix44(HmdMatrix44_t x)
+{			// they're the same, trust me!
+	return mat4x4_transpose( *((mat4x4*)((void*)&x)) );
+}
 
 mat4x4 mat4x4_mul_mat4x4(mat4x4 l, mat4x4 r)
 {

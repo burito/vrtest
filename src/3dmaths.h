@@ -77,6 +77,19 @@ typedef union {
 	float m[4][4];
 } mat4x4;
 
+// taken from Valve's OpenVR headers, don't use
+#ifndef __OPENVR_API_FLAT_H__
+typedef struct HmdMatrix34_t
+{
+	float m[3][4]; //float[3][4]
+} HmdMatrix34_t;
+
+typedef struct HmdMatrix44_t
+{
+	float m[4][4]; //float[4][4]
+} HmdMatrix44_t;
+#endif
+
 
 mat4x4 mat4x4_invert(mat4x4 m);
 mat4x4 mat4x4_transpose(mat4x4 m);
@@ -86,6 +99,8 @@ mat4x4 mat4x4_rot_y(float t);
 mat4x4 mat4x4_rot_z(float t);
 mat4x4 mat4x4_translate(vect v);
 mat4x4 mat4x4_translate_float(float x, float y, float z);
+mat4x4 mat4x4_perspective(float near, float far, float width, float height);
+mat4x4 mat4x4_orthographic(float near, float far, float width, float height);
 
 vect vect_norm(vect v);
 float vect_dot(vect l, vect r);
@@ -94,8 +109,11 @@ vect vect_cross(vect l, vect r);
 
 /*
 The following functions are to be called via the 
-_Generic() macro's mul(), add() and sub()
+_Generic() macro's mov(), mul(), add() and sub()
 */
+
+mat4x4 mat4x4_mov_HmdMatrix34(HmdMatrix34_t x);
+mat4x4 mat4x4_mov_HmdMatrix44(HmdMatrix44_t x);
 
 mat4x4 mat4x4_mul_mat4x4(mat4x4 l, mat4x4 r);
 vect mat4x4_mul_vect(mat4x4 l, vect r);
@@ -116,6 +134,11 @@ vect float_sub_vect(float l, vect r);
 int int_mul(int l, int r);
 int int_add(int l, int r);
 int int_sub(int l, int r);
+
+#define mov(X) _Generic(X, \
+	HmdMatrix34_t: mat4x4_mov_HmdMatrix34, \
+	HmdMatrix44_t: mat4x4_mov_HmdMatrix44 \
+	)(X)
 
 
 #define mul(X,Y) _Generic(X, \
@@ -146,5 +169,7 @@ int int_sub(int l, int r);
 		default:float_sub_float), \
 	default: int_sub \
 	)(X,Y)
+
+
 
 #endif /* __3DMATHS_H_ */
