@@ -68,7 +68,8 @@ int main_init(int argc, char *argv[])
 	shader = shader_load(
 		"data/shaders/vertex.shader",
 		"data/shaders/fragment.shader" );
-	shader_uniform(shader, "matrix");
+	shader_uniform(shader, "world");
+	shader_uniform(shader, "camera");
 
 	vr_init();
 
@@ -93,14 +94,15 @@ void render(mat4x4 pos, mat4x4 proj)
 	mat4x4 m;
 	m = mat4x4_rot_y(step);		// rotate the bunny
 	m = mul(m, mat4x4_translate_float(-0.5, 0, -0.5)); // around it's own origin
-	m = mul(mat4x4_translate_float( 0, 0, -2), m);	// move it 2 metres infront of the camera
-	m = mul( pos, m);
-	m = mul(proj, m);
+	m = mul(mat4x4_translate_float( 0, 0, -2), m);	// move it 2 metres infront of the origin
+//	m = mul( pos, m);
+	mat4x4 c = mul(proj, pos);
 
 //	printf("render\n");
 //	mat4x4_print(pos);
 
 	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
+	glUniformMatrix4fv(shader->unif[1], 1, GL_FALSE, c.f);
 	bunny->draw(bunny);
 	glUseProgram(0);
 }

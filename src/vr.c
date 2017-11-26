@@ -205,14 +205,15 @@ void ovr_draw(int i)
 }
 
 extern GLSLSHADER *shader;
-void ovr_render(mat4x4 matrix, mat4x4 proj)
+void ovr_render(mat4x4 pos, mat4x4 proj)
 {
 	if(!ovr_model_count)return;
 	glUseProgram(shader->prog);
 	mat4x4 m = controller_pose;
-	m = mul(matrix, m);
-	m = mul(proj, m);
+//	m = mul(matrix, m);
+	mat4x4 w = mul(proj,pos );
 	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
+	glUniformMatrix4fv(shader->unif[1], 1, GL_FALSE, w.f);
 	ovr_draw(0);
 	glUseProgram(0);
 }

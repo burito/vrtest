@@ -345,7 +345,7 @@ static void wf_face_normals(WF_OBJ *w)
 	{
 		a = sub( w->v[w->f[i].f.x], w->v[w->f[i].f.y] );
 		b = sub( w->v[w->f[i].f.x], w->v[w->f[i].f.z] );
-		t = vect_cross( b, a );
+		t = vect_cross( a, b );
 		w->f[i].normal = vect_norm( t );
 	}
 }

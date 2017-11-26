@@ -5,6 +5,9 @@ in vec3 v3Normal;
 out vec4 outputColor;
 void main()
 {
-//	outputColor = texture( diffuse, v2TexCoord);
-	outputColor = vec4(v3Normal, 1.0);
+	outputColor = texture( diffuse, v2TexCoord);
+
+	float ld = dot(v3Normal, vec3(0,-1,0));
+
+	outputColor = vec4(v3Normal, 1);
 }
