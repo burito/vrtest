@@ -31,7 +31,7 @@ freely, subject to the following restrictions:
 #include <openvr_capi.h>
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
+//#define WIN32_LEAN_AND_MEAN
 //#include <windows.h>
 //#include <synchapi.h>
 void Sleep (int dwMilliseconds);
@@ -87,8 +87,9 @@ char m_strPoseClasses[16+1]; // should never get above 16 = k_unMaxTrackedDevice
 char m_rDevClassChar[16+1];
 mat4x4 vrdevice_poses[16]; // 16 = k_unMaxTrackedDeviceCount
 mat4x4 hmdPose;
-mat4x4 controller_pose;
-int controller_id=0;
+mat4x4 controller_left, controller_right;
+int controller_left_id = -1;
+int controller_right_id = -1;
 
 mat4x4 eye_left, eye_left_proj;
 mat4x4 eye_right, eye_right_proj;
@@ -111,10 +112,36 @@ void ovr_model_load( TrackedDeviceIndex_t di )
 	ETrackedPropertyError tp_error;
 	EVRRenderModelError rm_error;
 
+	// we only want controller models
+	if(OVR->GetTrackedDeviceClass(di) != ETrackedDeviceClass_TrackedDeviceClass_Controller)return;
+
+	char device_name[1024];
+
 	OVR->GetStringTrackedDeviceProperty(di,
 		ETrackedDeviceProperty_Prop_RenderModelName_String,
-		ovr_models[ovr_model_count].name, 1024, &tp_error );
-	printf("filename = \"%s\"\n", ovr_models[ovr_model_count].name);
+		device_name, 1024, &tp_error );
+
+	int32_t role = OVR->GetInt32TrackedDeviceProperty(di, ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32, &tp_error );
+	printf("device_name = \"%s\", %d, %d\n", device_name, di, role);
+
+	switch(role) {
+	case ETrackedControllerRole_TrackedControllerRole_LeftHand:
+		controller_left_id = di;
+		break;
+	case ETrackedControllerRole_TrackedControllerRole_RightHand:
+		controller_right_id = di;
+		break;
+	case ETrackedControllerRole_TrackedControllerRole_Invalid:
+	default:
+		break;
+	}
+
+	for(int i=0; i<ovr_model_count; i++)
+		if(0 == strstr(ovr_models[i].name, device_name) )
+			return; // already loaded
+
+	memcpy(ovr_models[ovr_model_count].name, device_name, 1024);
+
 	RenderModel_t *ovr_rendermodel = NULL;
 	do
 	{
@@ -140,8 +167,6 @@ void ovr_model_load( TrackedDeviceIndex_t di )
 	{
 		printf("LoadRenderModel_Async(\"%s\"): %s\n", ovr_models[ovr_model_count].name, OVRM->GetRenderModelErrorNameFromEnum(rm_error) );
 	}
-
-	printf("still here\n");
 
 	GLuint va, vb, eab, tex, vcount;
 	// create and bind a VAO to hold state for this model
@@ -207,14 +232,21 @@ void ovr_draw(int i)
 extern GLSLSHADER *shader;
 void ovr_render(mat4x4 pos, mat4x4 proj)
 {
-	if(!ovr_model_count)return;
-	glUseProgram(shader->prog);
-	mat4x4 m = controller_pose;
-//	m = mul(matrix, m);
 	mat4x4 w = mul(proj,pos );
-	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
+	glUseProgram(shader->prog);
 	glUniformMatrix4fv(shader->unif[1], 1, GL_FALSE, w.f);
-	ovr_draw(0);
+
+	if(controller_left_id != -1)
+	{
+		glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, controller_left.f);
+		ovr_draw(0);
+	}
+	if(controller_right_id != -1)
+	{
+		glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, controller_right.f);
+		ovr_draw(0);
+	}
+
 	glUseProgram(0);
 }
 
@@ -409,13 +441,23 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	{
 		switch(vre.eventType) {
 			case EVREventType_VREvent_TrackedDeviceActivated:
-				printf("device activated - load a model here????\n");
+//				printf("device activated - load a model here\n");
 				break;
 			case EVREventType_VREvent_TrackedDeviceDeactivated:
-				printf("device deavtivated\n");
+				if( vre.trackedDeviceIndex == controller_left_id )
+				{
+					m_rDevClassChar[controller_left_id]=0;
+					controller_left_id = -1;
+				}
+				else if( vre.trackedDeviceIndex == controller_right_id )
+				{
+					m_rDevClassChar[controller_right_id]=0;
+					controller_right_id = -1;
+				}
+//				printf("device deactivated\n");
 				break;
 			case EVREventType_VREvent_TrackedDeviceUpdated:
-				printf("device updated\n");
+//				printf("device updated\n");
 				break;
 		}
 	}
@@ -451,13 +493,33 @@ void vr_loop( void render(mat4x4, mat4x4) )
 			{
 			case ETrackedDeviceClass_TrackedDeviceClass_Controller:
 				m_rDevClassChar[nDevice] = 'C';
-//				if(controller_id == 0)
-				controller_id = nDevice;
 				if(!ovr_model_count)
 				{
 					ovr_model_load(nDevice);
 				}
-				break;
+				//break;
+				if(controller_left_id == -1)
+					controller_left_id = nDevice;
+				else if(controller_right_id == -1)
+					controller_right_id = nDevice;
+
+/*				// Doesn't tell you which hand the controller is
+				ETrackedPropertyError tp_error;
+				int32_t role = OVR->GetInt32TrackedDeviceProperty(nDevice, ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32, &tp_error );
+				printf("device_name = %d, %d\n", nDevice, role);
+
+				switch(role) {
+				case ETrackedControllerRole_TrackedControllerRole_LeftHand:
+					controller_left_id = nDevice;
+					break;
+				case ETrackedControllerRole_TrackedControllerRole_RightHand:
+					controller_right_id = nDevice;
+					break;
+				case ETrackedControllerRole_TrackedControllerRole_Invalid:
+				default:
+					break;
+				}
+*/				break;
 			case ETrackedDeviceClass_TrackedDeviceClass_HMD:               m_rDevClassChar[nDevice] = 'H'; break;
 			case ETrackedDeviceClass_TrackedDeviceClass_Invalid:           m_rDevClassChar[nDevice] = 'I'; break;
 			case ETrackedDeviceClass_TrackedDeviceClass_GenericTracker:    m_rDevClassChar[nDevice] = 'G'; break;
@@ -478,7 +540,8 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	mat4x4 mat_l = mul(eye_left, hmdPose);
 	mat4x4 mat_r = mul(eye_right, hmdPose);
 
-	if(controller_id)controller_pose = vrdevice_poses[controller_id];
+	if(controller_left_id != -1)controller_left = vrdevice_poses[controller_left_id];
+	if(controller_right_id != -1)controller_right = vrdevice_poses[controller_right_id];
 
 // Render to the Headset
 	// RenderStereoTargets();
