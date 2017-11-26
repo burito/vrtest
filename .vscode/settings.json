@@ -10,6 +10,7 @@
         "glerror.h": "c",
         "shader.h": "c",
         "string.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "synchapi.h": "c"
     }
 }

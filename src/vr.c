@@ -33,6 +33,8 @@ freely, subject to the following restrictions:
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 //#include <windows.h>
+//#include <synchapi.h>
+void Sleep (int dwMilliseconds);
 #endif
 
 
@@ -208,7 +210,7 @@ void ovr_render(mat4x4 matrix, mat4x4 proj)
 	if(!ovr_model_count)return;
 	glUseProgram(shader->prog);
 	mat4x4 m = controller_pose;
-	m = mul(hmdPose, m);
+	m = mul(matrix, m);
 	m = mul(proj, m);
 	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
 	ovr_draw(0);
@@ -271,7 +273,7 @@ void hmd_eye_calc(EVREye eye, mat4x4 * dest_pose, mat4x4 *dest_proj)
 
 	mat4x4 proj = mov( OVR->GetProjectionMatrix( eye, fnear, ffar ) );
 	mat4x4 pos = mat4x4_invert( mov( OVR->GetEyeToHeadTransform( eye ) ) );
-	*dest_pose = mul(pos, hmdPose);
+	*dest_pose = pos;
 	*dest_proj = proj;
 }
 
@@ -323,6 +325,10 @@ void vr_init(void)
 		printf("VR_GetGenericInterface(\"%s\"): %s\n", IVRRenderModels_Version, VR_GetVRInitErrorAsSymbol(eError));
 		return;
 	}
+
+	// Get hmd position matrices
+	hmd_eye_calc(EVREye_Eye_Left, &eye_left, &eye_left_proj);
+	hmd_eye_calc(EVREye_Eye_Right, &eye_right, &eye_right_proj);
 
 	//	ETrackedDeviceProperty_Prop_TrackingSystemName_String = 1000
 	// ETrackedDeviceClass_TrackedDeviceClass_Controller
@@ -468,33 +474,30 @@ void vr_loop( void render(mat4x4, mat4x4) )
 		hmdPose = mat4x4_invert(vrdevice_poses[k_unTrackedDeviceIndex_Hmd]);
 	}
 
+	mat4x4 mat_l = mul(eye_left, hmdPose);
+	mat4x4 mat_r = mul(eye_right, hmdPose);
+
 	if(controller_id)controller_pose = vrdevice_poses[controller_id];
 
-
-	// Get hmd position matrices
-	hmd_eye_calc(EVREye_Eye_Left, &eye_left, &eye_left_proj);
-	hmd_eye_calc(EVREye_Eye_Right, &eye_right, &eye_right_proj);
-
 // Render to the Headset
-	glUseProgram( 0 );
-
+	// RenderStereoTargets();
 	glEnable( GL_MULTISAMPLE );
+
+	//Left eye
 	glBindFramebuffer( GL_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId );
 	glViewport(0, 0, m_nRenderWidth, m_nRenderHeight );
-
-	// render scene
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	render(eye_left, eye_left_proj);
-	ovr_render(eye_left, eye_left_proj);
-	//render finish
+	render(mat_l, eye_left_proj);
+	ovr_render(mat_l, eye_left_proj);
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+
 	glDisable( GL_MULTISAMPLE );
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, leftEyeDesc.m_nResolveFramebufferId );
 
 	glBlitFramebuffer( 0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, 
-		GL_COLOR_BUFFER_BIT, GL_LINEAR );
+		GL_COLOR_BUFFER_BIT,
+		GL_LINEAR );
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0 );
@@ -504,12 +507,8 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	// Right Eye
 	glBindFramebuffer( GL_FRAMEBUFFER, rightEyeDesc.m_nRenderFramebufferId );
 	glViewport(0, 0, m_nRenderWidth, m_nRenderHeight );
-	// render scene
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	render(eye_right, eye_right_proj);
-	ovr_render(eye_right, eye_right_proj);
-	
-	// render finish
+	render(mat_r, eye_right_proj);
+	ovr_render(mat_r, eye_right_proj);
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 
 	glDisable( GL_MULTISAMPLE );
@@ -518,25 +517,15 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, rightEyeDesc.m_nResolveFramebufferId );
 
 	glBlitFramebuffer( 0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, 
-		GL_COLOR_BUFFER_BIT, GL_LINEAR );
+		GL_COLOR_BUFFER_BIT,
+		GL_LINEAR );
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0 );
+	// end RenderStereoTargets();
 
-	// functions from example
-	// RenderControllerAxes()
-	// RenderStereoTargets()
+// render to the monitor
 	// RenderCompanionWindow()
-	EVRCompositorError cErr;
-	VRTextureBounds_t pBounds = { 0.0f, 0.0f, 1.0f, 1.0f };
-	Texture_t leftEyeTexture = {(void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, ETextureType_TextureType_OpenGL, EColorSpace_ColorSpace_Gamma};
-	cErr = OVRC->Submit(EVREye_Eye_Left, &leftEyeTexture, NULL, EVRSubmitFlags_Submit_Default);
-
-
-	Texture_t rightEyeTexture = {(void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, ETextureType_TextureType_OpenGL, EColorSpace_ColorSpace_Gamma};
-	cErr = OVRC->Submit(EVREye_Eye_Right, &rightEyeTexture, NULL, EVRSubmitFlags_Submit_Default);
-
-// render to the monitor		
 	glDisable(GL_DEPTH_TEST);
 	glViewport( 0, 0, vid_width, vid_height );
 
@@ -561,6 +550,15 @@ void vr_loop( void render(mat4x4, mat4x4) )
 
 	glBindVertexArray( 0 );
 	glUseProgram( 0 );
+	// end RenderCompanionWindow()
+
+	EVRCompositorError cErr;
+	Texture_t leftEyeTexture = {(void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, ETextureType_TextureType_OpenGL, EColorSpace_ColorSpace_Gamma};
+	cErr = OVRC->Submit(EVREye_Eye_Left, &leftEyeTexture, NULL, EVRSubmitFlags_Submit_Default);
+	Texture_t rightEyeTexture = {(void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, ETextureType_TextureType_OpenGL, EColorSpace_ColorSpace_Gamma};
+	cErr = OVRC->Submit(EVREye_Eye_Right, &rightEyeTexture, NULL, EVRSubmitFlags_Submit_Default);
+
+
 // work around to force HMD vsync from official example
 	glFinish();
 

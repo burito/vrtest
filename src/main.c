@@ -82,8 +82,9 @@ void main_end(void)
 }
 
 
-void render(mat4x4 matrix, mat4x4 proj)
+void render(mat4x4 pos, mat4x4 proj)
 {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(shader->prog);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -92,9 +93,12 @@ void render(mat4x4 matrix, mat4x4 proj)
 	mat4x4 m;
 	m = mat4x4_rot_y(step);		// rotate the bunny
 	m = mul(m, mat4x4_translate_float(-0.5, 0, -0.5)); // around it's own origin
-	m = mul(mat4x4_translate_float( 2, 0, -2), m);	// move it 2 metres infront of the camera
-	m = mul( matrix, m);
+	m = mul(mat4x4_translate_float( 0, 0, -2), m);	// move it 2 metres infront of the camera
+	m = mul( pos, m);
 	m = mul(proj, m);
+
+//	printf("render\n");
+//	mat4x4_print(pos);
 
 	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
 	bunny->draw(bunny);

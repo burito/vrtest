@@ -90,7 +90,7 @@ typedef struct HmdMatrix44_t
 } HmdMatrix44_t;
 #endif
 
-
+void mat4x4_print(mat4x4 m);
 mat4x4 mat4x4_invert(mat4x4 m);
 mat4x4 mat4x4_transpose(mat4x4 m);
 mat4x4 mat4x4_identity(void);

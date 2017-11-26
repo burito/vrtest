@@ -26,6 +26,7 @@ freely, subject to the following restrictions:
 
 
 #include <math.h>
+#include <stdio.h>
 
 #include "3dmaths.h"
 
@@ -44,7 +45,15 @@ float finvsqrt(float x)
 	return x;
 }
 
-
+void mat4x4_print(mat4x4 m)
+{
+	printf("\t%f\t%f\t%f\t%f\n\t%f\t%f\t%f\t%f\n\t%f\t%f\t%f\t%f\n\t%f\t%f\t%f\t%f\n",
+		m.m[0][0], m.m[1][1], m.m[0][2], m.m[0][3],
+		m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3],
+		m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3],
+		m.m[3][0], m.m[3][1], m.m[3][2], m.m[3][3]
+	);
+}
 
 mat4x4 mat4x4_invert(mat4x4 m)
 {
