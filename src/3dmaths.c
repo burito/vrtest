@@ -186,7 +186,7 @@ mat4x4 mat4x4_mov_HmdMatrix34(HmdMatrix34_t x)
 		x.m[0][2], x.m[1][2], x.m[2][2], 0.0f,	
 		x.m[0][3], x.m[1][3], x.m[2][3], 1.0f,	
 	};
-	return mat4x4_invert(r);
+	return r;
 }
 
 mat4x4 mat4x4_mov_HmdMatrix44(HmdMatrix44_t x)

@@ -30,10 +30,17 @@ freely, subject to the following restrictions:
 #include <string.h>
 #include <openvr_capi.h>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+//#include <windows.h>
+#endif
+
+
 #include "shader.h"
 #include "3dmaths.h"
 #include "glerror.h"
 #include "main.h"
+
 
 int vr_using = 0;
 
@@ -45,10 +52,19 @@ int VR_IsRuntimeInstalled();
 const char * VR_GetVRInitErrorAsSymbol( EVRInitError error );
 const char * VR_GetVRInitErrorAsEnglishDescription( EVRInitError error );
 
+void sleep(unsigned int msec)
+{
+#ifdef _WIN32
+	Sleep(msec);
+#else
+	usleep(msec*1000);
+#endif
+}
 
 struct VR_IVRSystem_FnTable * OVR = NULL;
-struct VR_IVRCompositor_FnTable * OVRC; 
-// k_unMaxTrackedDeviceCount = 16	// gcc doesn't like the way this is declared
+struct VR_IVRCompositor_FnTable * OVRC;
+struct VR_IVRRenderModels_FnTable * OVRM;
+// k_unMaxTrackedDeviceCount = 16 // gcc doesn't like the way this is declared
 TrackedDevicePose_t m_rTrackedDevicePose [16];
 
 struct FramebufferDesc
@@ -59,8 +75,8 @@ struct FramebufferDesc
 	GLuint m_nResolveTextureId;
 	GLuint m_nResolveFramebufferId;
 };
-struct FramebufferDesc leftEyeDesc;
-struct FramebufferDesc rightEyeDesc;
+struct FramebufferDesc leftEyeDesc = {0};
+struct FramebufferDesc rightEyeDesc = {0};
 
 uint32_t m_nRenderWidth;
 uint32_t m_nRenderHeight;
@@ -69,10 +85,133 @@ char m_strPoseClasses[16+1]; // should never get above 16 = k_unMaxTrackedDevice
 char m_rDevClassChar[16+1];
 mat4x4 vrdevice_poses[16]; // 16 = k_unMaxTrackedDeviceCount
 mat4x4 hmdPose;
-mat4x4 eye_left;
-mat4x4 eye_right;
-GLSLSHADER *eye_prog;
-GLuint eye_VAO, eye_VBO, eye_EAB;
+mat4x4 controller_pose;
+mat4x4 eye_left, eye_left_proj;
+mat4x4 eye_right, eye_right_proj;
+GLSLSHADER *eye_prog = NULL;
+GLuint eye_VAO = 0;
+GLuint eye_VBO, eye_EAB;
+
+char controller_filename[1024] = {0};
+
+typedef struct {
+	GLuint va, vb, eab, tex, vcount;
+	char name[1024];
+} ovr_mesh;
+
+ovr_mesh ovr_models[10];
+int ovr_model_count = 0;
+
+void ovr_model_load( TrackedDeviceIndex_t di )
+{
+	ETrackedPropertyError tp_error;
+	EVRRenderModelError rm_error;
+
+	OVR->GetStringTrackedDeviceProperty(di,
+		ETrackedDeviceProperty_Prop_RenderModelName_String,
+		ovr_models[ovr_model_count].name, 1024, &tp_error );
+	printf("filename = \"%s\"\n", ovr_models[ovr_model_count].name);
+	RenderModel_t *ovr_rendermodel = NULL;
+	do
+	{
+		rm_error = OVRM->LoadRenderModel_Async(ovr_models[ovr_model_count].name, &ovr_rendermodel);
+		sleep(1);
+	}
+	while(rm_error == EVRRenderModelError_VRRenderModelError_Loading);
+
+	if(rm_error != EVRRenderModelError_VRRenderModelError_None)
+	{
+		printf("LoadRenderModel_Async(\"%s\"): %s\n", ovr_models[ovr_model_count].name, OVRM->GetRenderModelErrorNameFromEnum(rm_error) );
+	}
+	RenderModel_TextureMap_t *ovr_texture = NULL;
+
+	do
+	{
+		rm_error = OVRM->LoadTexture_Async(ovr_rendermodel->diffuseTextureId, &ovr_texture);
+		sleep(1);
+	}
+	while(rm_error == EVRRenderModelError_VRRenderModelError_Loading);
+
+	if(rm_error != EVRRenderModelError_VRRenderModelError_None)
+	{
+		printf("LoadRenderModel_Async(\"%s\"): %s\n", ovr_models[ovr_model_count].name, OVRM->GetRenderModelErrorNameFromEnum(rm_error) );
+	}
+
+	printf("still here\n");
+
+	GLuint va, vb, eab, tex, vcount;
+	// create and bind a VAO to hold state for this model
+	glGenVertexArrays( 1, &ovr_models[ovr_model_count].va );
+	glBindVertexArray( ovr_models[ovr_model_count].va );
+
+	// Populate a vertex buffer
+	glGenBuffers( 1, &ovr_models[ovr_model_count].vb );
+	glBindBuffer( GL_ARRAY_BUFFER, ovr_models[ovr_model_count].vb );
+	glBufferData( GL_ARRAY_BUFFER, sizeof( RenderModel_Vertex_t ) * ovr_rendermodel->unVertexCount, ovr_rendermodel->rVertexData, GL_STATIC_DRAW );
+
+	// Identify the components in the vertex buffer
+	glEnableVertexAttribArray( 0 );
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 32, (GLvoid *)0  );
+	glEnableVertexAttribArray( 1 );
+	glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, 32, (GLvoid *)12 );
+	glEnableVertexAttribArray( 2 );
+	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, 32, (GLvoid *)24 );
+
+	// Create and populate the index buffer
+	glGenBuffers( 1, &ovr_models[ovr_model_count].eab );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ovr_models[ovr_model_count].eab );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( uint16_t ) * ovr_rendermodel->unTriangleCount * 3, ovr_rendermodel->rIndexData, GL_STATIC_DRAW );
+
+	glBindVertexArray( 0 );
+
+	// create and populate the texture
+	glGenTextures(1, &ovr_models[ovr_model_count].tex );
+	glBindTexture( GL_TEXTURE_2D, ovr_models[ovr_model_count].tex );
+
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, ovr_texture->unWidth, ovr_texture->unHeight,
+		0, GL_RGBA, GL_UNSIGNED_BYTE, ovr_texture->rubTextureMapData );
+
+	// If this renders black ask McJohn what's wrong.
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+
+	GLfloat fLargest;
+	glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest );
+
+	glBindTexture( GL_TEXTURE_2D, 0 );
+
+	ovr_models[ovr_model_count].vcount = ovr_rendermodel->unTriangleCount * 3;
+	ovr_model_count++;
+//	return ovr_model_count - 1;
+}
+
+void ovr_draw(int i)
+{
+	glBindVertexArray( ovr_models[i].va );
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D, ovr_models[i].tex );
+	glDrawElements( GL_TRIANGLES, ovr_models[i].vcount, GL_UNSIGNED_SHORT, 0 );
+	glBindVertexArray( 0 );
+	glBindTexture( GL_TEXTURE_2D, 0 );
+}
+
+extern GLSLSHADER *shader;
+void ovr_render(mat4x4 matrix, mat4x4 proj)
+{
+	if(!ovr_model_count)return;
+	glUseProgram(shader->prog);
+	mat4x4 m = controller_pose;
+	m = mul(hmdPose, m);
+	m = mul(proj, m);
+	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
+	ovr_draw(0);
+	glUseProgram(0);
+}
 
 
 //-----------------------------------------------------------------------------
@@ -118,83 +257,92 @@ bool CreateFrameBuffer( int nWidth, int nHeight, struct FramebufferDesc *framebu
 		printf("framebuffer2 creation failed\n");
 		return 1;
 	}
-	printf("Framebuffer creation ok! %d, %d\n", nWidth, nHeight);
+
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
-	printf("Error = \"%s\"\n", glError(glGetError()));
 	return 0;
 }
 
-void hmd_eye_calc(EVREye eye, mat4x4 * dest)
+void hmd_eye_calc(EVREye eye, mat4x4 * dest_pose, mat4x4 *dest_proj)
 {
-	float near = 0.1f;
-	float far = 30.0f;
+	float fnear = 0.1;
+	float ffar = 30.0f;
 
-	mat4x4 proj = mov( OVR->GetProjectionMatrix( eye, near, far ) );
-	mat4x4 pos = mov( OVR->GetEyeToHeadTransform( eye ) );
-	pos = mat4x4_invert(pos);
-	*dest = mul(proj, mul(pos, hmdPose));
+	mat4x4 proj = mov( OVR->GetProjectionMatrix( eye, fnear, ffar ) );
+	mat4x4 pos = mat4x4_invert( mov( OVR->GetEyeToHeadTransform( eye ) ) );
+	*dest_pose = mul(pos, hmdPose);
+	*dest_proj = proj;
 }
 
 
 void vr_init(void)
 {
-	printf("About to test for Headset\n");
-	
 	EVRInitError eError;
 
-	if( VR_IsHmdPresent() )
+	if( !VR_IsHmdPresent() )
 	{
-		printf("VR Headset Present\n");
+		printf("VR Headset is not present\n");
 	}
-
-	printf("not dead yet\n");
 	
-	if( VR_IsRuntimeInstalled() )
+	if( !VR_IsRuntimeInstalled() )
 	{
-		printf("VR Runtime Installed\n");
+		printf("VR Runtime is not installed\n");
+		return;
 	}
-
-	printf("not dead yet\n");
 	
 	uint32_t vrToken = VR_InitInternal(&eError, EVRApplicationType_VRApplication_Scene);
-
-	switch(eError){
-		case EVRInitError_VRInitError_None:
-			printf("all good\n");
-			break;
-		default:
-			printf("error = %d\n", eError);
+	if (eError != EVRInitError_VRInitError_None)
+	{
+		printf("VR_InitInternal: %s\n", VR_GetVRInitErrorAsSymbol(eError));
+		return;
 	}
 
 	char fnTableName[128];
-	int result1 = sprintf(fnTableName, "FnTable:%s", IVRSystem_Version);
 
-	printf("FNTable: %s\n", fnTableName);
+	int result1 = sprintf(fnTableName, "FnTable:%s", IVRSystem_Version);
 	OVR = (struct VR_IVRSystem_FnTable *)VR_GetGenericInterface(fnTableName, &eError);
+	if (eError != EVRInitError_VRInitError_None)
+	{
+		printf("VR_GetGenericInterface(\"%s\"): %s\n", IVRSystem_Version, VR_GetVRInitErrorAsSymbol(eError));
+		return;
+	}
 
 	result1 = sprintf(fnTableName, "FnTable:%s", IVRCompositor_Version);
-	printf("FNTableC: %s\n", fnTableName);
 	OVRC = (struct VR_IVRCompositor_FnTable *)VR_GetGenericInterface(fnTableName, &eError);
-	
 	if (eError != EVRInitError_VRInitError_None)
+	{
+		printf("VR_GetGenericInterface(\"%s\"): %s\n", IVRCompositor_Version, VR_GetVRInitErrorAsSymbol(eError));
 		return;
-	if (OVR == NULL)
-		return;
+	}
 
+	result1 = sprintf(fnTableName, "FnTable:%s", IVRRenderModels_Version);
+	OVRM = (struct VR_IVRRenderModels_FnTable *)VR_GetGenericInterface(fnTableName, &eError );
+	if (eError != EVRInitError_VRInitError_None)
+	{
+		printf("VR_GetGenericInterface(\"%s\"): %s\n", IVRRenderModels_Version, VR_GetVRInitErrorAsSymbol(eError));
+		return;
+	}
+
+	//	ETrackedDeviceProperty_Prop_TrackingSystemName_String = 1000
+	// ETrackedDeviceClass_TrackedDeviceClass_Controller
+//	OVR->GetStringTrackedDeviceProperty()
+/*
 	bool result2 = OVR->IsDisplayOnDesktop();
-
 	if (result2)
 		printf("Display is on desktop\n");
 	else
 		printf("Display is NOT on desktop\n");
+*/
 
-	OVR->GetRecommendedRenderTargetSize( &m_nRenderWidth, &m_nRenderHeight );
-	CreateFrameBuffer( m_nRenderWidth, m_nRenderHeight, &leftEyeDesc );
-	CreateFrameBuffer( m_nRenderWidth, m_nRenderHeight, &rightEyeDesc );
+	if(!leftEyeDesc.m_nDepthBufferId)
+	{
+		OVR->GetRecommendedRenderTargetSize( &m_nRenderWidth, &m_nRenderHeight );
+		CreateFrameBuffer( m_nRenderWidth, m_nRenderHeight, &leftEyeDesc );
+		CreateFrameBuffer( m_nRenderWidth, m_nRenderHeight, &rightEyeDesc );
+	}
 
-	eye_prog = shader_load(
-		"data/shaders/window.vert",
-		"data/shaders/window.frag" );
+	if(!eye_prog) eye_prog = shader_load(
+			"data/shaders/window.vert",
+			"data/shaders/window.frag" );
 
 	float eye_verts[] = {
 		// left eye
@@ -211,26 +359,29 @@ void vr_init(void)
 
 	GLushort eye_ind[]  = { 0, 1, 2,   0, 2, 3,   4, 5, 6,   4, 6, 7};
 
-	glGenVertexArrays( 1, &eye_VAO );
-	glBindVertexArray( eye_VAO );
+	if(!eye_VAO)
+	{
+		glGenVertexArrays( 1, &eye_VAO );
+		glBindVertexArray( eye_VAO );
 
-	glGenBuffers( 1, &eye_VBO );
-	glBindBuffer( GL_ARRAY_BUFFER, eye_VBO );
-	glBufferData( GL_ARRAY_BUFFER, sizeof(eye_verts), &eye_verts[0], GL_STATIC_DRAW );
+		glGenBuffers( 1, &eye_VBO );
+		glBindBuffer( GL_ARRAY_BUFFER, eye_VBO );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(eye_verts), &eye_verts[0], GL_STATIC_DRAW );
 
-	glGenBuffers( 1, &eye_EAB );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, eye_EAB );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(eye_ind), &eye_ind[0], GL_STATIC_DRAW );
+		glGenBuffers( 1, &eye_EAB );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, eye_EAB );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(eye_ind), &eye_ind[0], GL_STATIC_DRAW );
 
-	glEnableVertexAttribArray( 0 );
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 16, (void *)0 );
+		glEnableVertexAttribArray( 0 );
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 16, (void *)0 );
 
-	glEnableVertexAttribArray( 1 );
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 16, (void *)8 );
+		glEnableVertexAttribArray( 1 );
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 16, (void *)8 );
 
-	glBindVertexArray( 0 );
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindVertexArray( 0 );
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
 
 	vr_using = 1;
 }
@@ -241,7 +392,7 @@ void vr_end(void)
 	vr_using = 0;
 }
 
-void vr_loop( void render(mat4x4) )
+void vr_loop( void render(mat4x4, mat4x4) )
 {
 // Process OpenVR events
 	struct VREvent_t vre;
@@ -249,7 +400,7 @@ void vr_loop( void render(mat4x4) )
 	{
 		switch(vre.eventType) {
 			case EVREventType_VREvent_TrackedDeviceActivated:
-				printf("device activated\n");
+				printf("device activated - load a model here????\n");
 				break;
 			case EVREventType_VREvent_TrackedDeviceDeactivated:
 				printf("device deavtivated\n");
@@ -260,7 +411,7 @@ void vr_loop( void render(mat4x4) )
 		}
 	}
 	
-	// Process OpenVR Controller			// k_unMaxTrackedDeviceCount = 16
+	// Process OpenVR Controller // k_unMaxTrackedDeviceCount = 16
 	for( TrackedDeviceIndex_t unDevice = 0; unDevice < 16; unDevice++)
 	{
 		struct VRControllerState_t state;
@@ -274,11 +425,12 @@ void vr_loop( void render(mat4x4) )
 	}
 
 // Process HMD Position
-	// UpdateHMDMatrixPose()		// k_unMaxTrackedDeviceCount = 16
+	// UpdateHMDMatrixPose() // k_unMaxTrackedDeviceCount = 16
 	OVRC->WaitGetPoses(m_rTrackedDevicePose, 16, NULL, 0);
 	m_iValidPoseCount = 0;
 	m_strPoseClasses[0] = 0;
-		
+
+	int controller_id=0;
 	for(int nDevice = 0; nDevice < 16; nDevice++)
 	if(m_rTrackedDevicePose[nDevice].bPoseIsValid)
 	{
@@ -289,7 +441,16 @@ void vr_loop( void render(mat4x4) )
 		{
 			switch (OVR->GetTrackedDeviceClass(nDevice))
 			{
-			case ETrackedDeviceClass_TrackedDeviceClass_Controller:        m_rDevClassChar[nDevice] = 'C'; break;
+			case ETrackedDeviceClass_TrackedDeviceClass_Controller:
+				m_rDevClassChar[nDevice] = 'C';
+//				if(controller_id == 0)
+					controller_id = nDevice;
+//				controller_id = nDevice;
+				if(!ovr_model_count)
+				{
+					ovr_model_load(nDevice);
+				}
+				break;
 			case ETrackedDeviceClass_TrackedDeviceClass_HMD:               m_rDevClassChar[nDevice] = 'H'; break;
 			case ETrackedDeviceClass_TrackedDeviceClass_Invalid:           m_rDevClassChar[nDevice] = 'I'; break;
 			case ETrackedDeviceClass_TrackedDeviceClass_GenericTracker:    m_rDevClassChar[nDevice] = 'G'; break;
@@ -297,16 +458,22 @@ void vr_loop( void render(mat4x4) )
 			default:                                       m_rDevClassChar[nDevice] = '?'; break;
 			}
 		}
+//		printf("%c", m_rDevClassChar[nDevice]);
 		m_strPoseClasses[nDevice] += m_rDevClassChar[nDevice];
 	}
+//	printf("\n");
 
 	if ( m_rTrackedDevicePose[k_unTrackedDeviceIndex_Hmd].bPoseIsValid )
 	{
-		hmdPose = vrdevice_poses[k_unTrackedDeviceIndex_Hmd];
+		hmdPose = mat4x4_invert(vrdevice_poses[k_unTrackedDeviceIndex_Hmd]);
 	}
+
+	if(controller_id)controller_pose = vrdevice_poses[controller_id];
+
+
 	// Get hmd position matrices
-	hmd_eye_calc(EVREye_Eye_Left, &eye_left);
-	hmd_eye_calc(EVREye_Eye_Right, &eye_right);
+	hmd_eye_calc(EVREye_Eye_Left, &eye_left, &eye_left_proj);
+	hmd_eye_calc(EVREye_Eye_Right, &eye_right, &eye_right_proj);
 
 // Render to the Headset
 	glUseProgram( 0 );
@@ -317,7 +484,8 @@ void vr_loop( void render(mat4x4) )
 
 	// render scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	render(eye_left);
+	render(eye_left, eye_left_proj);
+	ovr_render(eye_left, eye_left_proj);
 	//render finish
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 	glDisable( GL_MULTISAMPLE );
@@ -338,7 +506,8 @@ void vr_loop( void render(mat4x4) )
 	glViewport(0, 0, m_nRenderWidth, m_nRenderHeight );
 	// render scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	render(eye_right);
+	render(eye_right, eye_right_proj);
+	ovr_render(eye_right, eye_right_proj);
 	
 	// render finish
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
@@ -361,11 +530,11 @@ void vr_loop( void render(mat4x4) )
 	EVRCompositorError cErr;
 	VRTextureBounds_t pBounds = { 0.0f, 0.0f, 1.0f, 1.0f };
 	Texture_t leftEyeTexture = {(void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, ETextureType_TextureType_OpenGL, EColorSpace_ColorSpace_Gamma};
-	cErr = OVRC->Submit(EVREye_Eye_Left, &leftEyeTexture, &pBounds, EVRSubmitFlags_Submit_Default);
+	cErr = OVRC->Submit(EVREye_Eye_Left, &leftEyeTexture, NULL, EVRSubmitFlags_Submit_Default);
 
 
 	Texture_t rightEyeTexture = {(void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, ETextureType_TextureType_OpenGL, EColorSpace_ColorSpace_Gamma};
-	cErr = OVRC->Submit(EVREye_Eye_Right, &rightEyeTexture, &pBounds, EVRSubmitFlags_Submit_Default);
+	cErr = OVRC->Submit(EVREye_Eye_Right, &rightEyeTexture, NULL, EVRSubmitFlags_Submit_Default);
 
 // render to the monitor		
 	glDisable(GL_DEPTH_TEST);

@@ -25,4 +25,4 @@ extern int vr_using;
 
 void vr_init(void);
 void vr_end(void);
-void vr_loop( void ( mat4x4 ) );
+void vr_loop( void ( mat4x4, mat4x4 ) );

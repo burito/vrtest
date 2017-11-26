@@ -5,6 +5,11 @@
         "invert4x4_sse.h": "c",
         "3dmaths.h": "c",
         "*.rh": "c",
-        "text.h": "c"
+        "text.h": "c",
+        "main.h": "c",
+        "glerror.h": "c",
+        "shader.h": "c",
+        "string.h": "c",
+        "stdio.h": "c"
     }
 }
