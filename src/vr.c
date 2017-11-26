@@ -86,6 +86,8 @@ char m_rDevClassChar[16+1];
 mat4x4 vrdevice_poses[16]; // 16 = k_unMaxTrackedDeviceCount
 mat4x4 hmdPose;
 mat4x4 controller_pose;
+int controller_id=0;
+
 mat4x4 eye_left, eye_left_proj;
 mat4x4 eye_right, eye_right_proj;
 GLSLSHADER *eye_prog = NULL;
@@ -430,7 +432,6 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	m_iValidPoseCount = 0;
 	m_strPoseClasses[0] = 0;
 
-	int controller_id=0;
 	for(int nDevice = 0; nDevice < 16; nDevice++)
 	if(m_rTrackedDevicePose[nDevice].bPoseIsValid)
 	{
@@ -444,8 +445,7 @@ void vr_loop( void render(mat4x4, mat4x4) )
 			case ETrackedDeviceClass_TrackedDeviceClass_Controller:
 				m_rDevClassChar[nDevice] = 'C';
 //				if(controller_id == 0)
-					controller_id = nDevice;
-//				controller_id = nDevice;
+				controller_id = nDevice;
 				if(!ovr_model_count)
 				{
 					ovr_model_load(nDevice);
@@ -461,7 +461,7 @@ void vr_loop( void render(mat4x4, mat4x4) )
 //		printf("%c", m_rDevClassChar[nDevice]);
 		m_strPoseClasses[nDevice] += m_rDevClassChar[nDevice];
 	}
-//	printf("\n");
+//	printf(" - %d, %d\n", m_iValidPoseCount, controller_id);
 
 	if ( m_rTrackedDevicePose[k_unTrackedDeviceIndex_Hmd].bPoseIsValid )
 	{
