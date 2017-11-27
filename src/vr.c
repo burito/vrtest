@@ -107,6 +107,75 @@ typedef struct {
 ovr_mesh ovr_models[10];
 int ovr_model_count = 0;
 
+
+void device_spam(int id)
+{
+	ETrackedPropertyError tp_error;
+
+	char device_name[1024];
+	int32_t role;
+	int32_t class;
+	char class_letter;
+
+	OVR->GetStringTrackedDeviceProperty(id,
+		ETrackedDeviceProperty_Prop_RenderModelName_String,
+		device_name, 1024, &tp_error );
+	if(tp_error) printf("\nDeviceName:TP_Error = \"%s\"\n", OVR->GetPropErrorNameFromEnum(tp_error) );
+
+	class = OVR->GetTrackedDeviceClass(id);
+
+	switch (class)
+	{
+	case ETrackedDeviceClass_TrackedDeviceClass_Controller:        class_letter = 'C'; break;
+	case ETrackedDeviceClass_TrackedDeviceClass_HMD:               class_letter = 'H'; break;
+	case ETrackedDeviceClass_TrackedDeviceClass_Invalid:           class_letter = 'I'; break;
+	case ETrackedDeviceClass_TrackedDeviceClass_GenericTracker:    class_letter = 'G'; break;
+	case ETrackedDeviceClass_TrackedDeviceClass_TrackingReference: class_letter = 'T'; break;
+	case ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect:   class_letter = 'D'; break;
+	default:                                                       class_letter = '?'; break;
+	}
+	
+
+
+	printf("%d:%c:%s:", id, class_letter, device_name);
+
+	switch (class)
+	{
+	case ETrackedDeviceClass_TrackedDeviceClass_Controller:
+		role = OVR->GetInt32TrackedDeviceProperty(id, ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32, &tp_error );
+		if(tp_error) printf("\nRoleHint:TP_Error = \"%s\"\n", OVR->GetPropErrorNameFromEnum(tp_error) );
+		switch(role) {
+		case ETrackedControllerRole_TrackedControllerRole_LeftHand:
+			printf("LeftHand:");
+			break;
+		case ETrackedControllerRole_TrackedControllerRole_RightHand:
+			printf("RightHand:");
+			break;
+		case ETrackedControllerRole_TrackedControllerRole_Invalid:
+			printf("InvalidHand:");
+			break;
+		default:
+			printf("UndocumentedHand:");
+			break;
+		}
+	
+		break;
+	case ETrackedDeviceClass_TrackedDeviceClass_HMD:
+		break;
+	case ETrackedDeviceClass_TrackedDeviceClass_Invalid:
+		break;
+	case ETrackedDeviceClass_TrackedDeviceClass_GenericTracker:
+		break;
+	case ETrackedDeviceClass_TrackedDeviceClass_TrackingReference:
+		break;
+	case ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect:
+		break;
+	}
+
+	printf("\n");
+}
+
+
 void ovr_model_load( TrackedDeviceIndex_t di )
 {
 	ETrackedPropertyError tp_error;
@@ -481,9 +550,12 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	m_iValidPoseCount = 0;
 	m_strPoseClasses[0] = 0;
 
+	printf("begin device spam\n");
+
 	for(int nDevice = 0; nDevice < 16; nDevice++)
 	if(m_rTrackedDevicePose[nDevice].bPoseIsValid)
 	{
+		device_spam(nDevice);
 		m_iValidPoseCount++;
 		// m_rmat4DevicePose[nDevice]
 		vrdevice_poses[nDevice] = mov( m_rTrackedDevicePose[nDevice].mDeviceToAbsoluteTracking );
@@ -531,7 +603,7 @@ void vr_loop( void render(mat4x4, mat4x4) )
 		m_strPoseClasses[nDevice] += m_rDevClassChar[nDevice];
 	}
 //	printf(" - %d, %d\n", m_iValidPoseCount, controller_id);
-
+	printf("end device spam\n");
 	if ( m_rTrackedDevicePose[k_unTrackedDeviceIndex_Hmd].bPoseIsValid )
 	{
 		hmdPose = mat4x4_invert(vrdevice_poses[k_unTrackedDeviceIndex_Hmd]);
