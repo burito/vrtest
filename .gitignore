@@ -5,12 +5,14 @@ src/version.h
 # compiler output
 *.o
 *.exe
+gui.ilk
+gui.pdb
 *.res
 gui
 gui.bin
 gui.app
 build
-openvr_api.dll
+./openvr_api.dll
 *.xcodeproj
 
 # trash
