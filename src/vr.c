@@ -277,10 +277,11 @@ void ovr_model_load( TrackedDeviceIndex_t di )
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 
+#ifndef __APPLE__
 	GLfloat fLargest;
 	glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest );
-
+#endif
 	glBindTexture( GL_TEXTURE_2D, 0 );
 
 	ovr_models[ovr_model_count].vcount = ovr_rendermodel->unTriangleCount * 3;
