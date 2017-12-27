@@ -35,6 +35,9 @@ freely, subject to the following restrictions:
 //#include <windows.h>
 //#include <synchapi.h>
 void Sleep (int dwMilliseconds);
+#elif __APPLE__
+// #include <unistd.h>	// but it defines sleep() too
+int	usleep(unsigned int useconds);
 #endif
 
 
@@ -54,7 +57,7 @@ int VR_IsRuntimeInstalled();
 const char * VR_GetVRInitErrorAsSymbol( EVRInitError error );
 const char * VR_GetVRInitErrorAsEnglishDescription( EVRInitError error );
 
-void sleep(unsigned int msec)
+static void sleep(unsigned int msec)
 {
 #ifdef _WIN32
 	Sleep(msec);
