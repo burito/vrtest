@@ -197,6 +197,7 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	}
 	main_loop();
 	[glcontext flushBuffer];
+	[glcontext updateIfNeeded];
 	CGLUnlockContext(context);
 //	ff_set();
 
@@ -274,7 +275,7 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 -(id)init
 {
 	NSRect contentSize = NSMakeRect(100.0, 400.0, 640.0, 360.0);
-	NSUInteger windowStyleMask = NSTitledWindowMask | NSResizableWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask;
+	NSUInteger windowStyleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
 	window = [[NSWindow alloc] initWithContentRect:contentSize styleMask:windowStyleMask backing:NSBackingStoreBuffered defer:YES];
 	window.backgroundColor = [NSColor whiteColor];
 	window.title = @"Kittens";
@@ -331,7 +332,7 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	menuItem = [aMenu addItemWithTitle:NSLocalizedString(@"Fullscreen", nil)
 				    action:@selector(toggleFullScreen:)
 			     keyEquivalent:@"f"];
-	[menuItem setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
+	[menuItem setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
 	menuItem.target = nil;
 
 	[aMenu addItem:[NSMenuItem separatorItem]];
@@ -580,21 +581,21 @@ static void mouse_move(NSEvent * theEvent)
 // https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSEvent_Class/#//apple_ref/c/tdef/NSEventType
 	int bit=0;
 	switch(theEvent.type) {
-	case NSLeftMouseDown:
+	case NSEventTypeLeftMouseDown:
 		bit = 1;
-	case NSLeftMouseUp:
+	case NSEventTypeLeftMouseUp:
 		mouse[0] = bit;
 		mouse_move(theEvent);
 		break;
-	case NSRightMouseDown:
+	case NSEventTypeRightMouseDown:
 		bit = 1;
-	case NSRightMouseUp:
+	case NSEventTypeRightMouseUp:
 		mouse[1] = bit;
 		mouse_move(theEvent);
 		break;
-	case NSOtherMouseDown:
+	case NSEventTypeOtherMouseDown:
 		bit = 1;
-	case NSOtherMouseUp:
+	case NSEventTypeOtherMouseUp:
 		switch(theEvent.buttonNumber) {
 		case 2: mouse[2] = bit; break;
 		case 3: mouse[3] = bit; break;
@@ -607,19 +608,19 @@ static void mouse_move(NSEvent * theEvent)
 		mouse_move(theEvent);
 		break;
 
-	case NSMouseMoved:
-	case NSLeftMouseDragged:
-	case NSRightMouseDragged:
-	case NSOtherMouseDragged:
+	case NSEventTypeMouseMoved:
+	case NSEventTypeLeftMouseDragged:
+	case NSEventTypeRightMouseDragged:
+	case NSEventTypeOtherMouseDragged:
 		mouse_move(theEvent);
 		break;
 
-	case NSKeyDown:
+	case NSEventTypeKeyDown:
 		bit = 1;
-	case NSKeyUp:
+	case NSEventTypeKeyUp:
 		keys[theEvent.keyCode] = bit;
 		break;
-	case NSFlagsChanged:
+	case NSEventTypeFlagsChanged:
 		for(int i = 0; i<24; i++)
 		{
 			bit = !!(theEvent.modifierFlags & (1 << i));
@@ -644,11 +645,11 @@ static void mouse_move(NSEvent * theEvent)
 		}
 		break;
 
-	case NSScrollWheel:
+	case NSEventTypeScrollWheel:
 		break;
 
-	case NSMouseEntered:
-	case NSMouseExited:
+	case NSEventTypeMouseEntered:
+	case NSEventTypeMouseExited:
 		mouse[0] = 0;
 		break;
 
