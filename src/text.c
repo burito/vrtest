@@ -21,6 +21,10 @@ freely, subject to the following restrictions:
    distribution.
 */
 
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

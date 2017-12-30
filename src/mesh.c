@@ -26,6 +26,10 @@ freely, subject to the following restrictions:
 #include <GL/glew.h>
 #endif
 
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
