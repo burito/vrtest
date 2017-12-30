@@ -5,8 +5,8 @@ Please read the instructions at...
 ...for help
 endef
 
-CFLAGS = -std=c11 -Isrc -Isrc/openvr
-SDIR = src
+CFLAGS = -std=c11 -Ilib/include
+VPATH = src lib
 OBJS = main.o text.o mesh.o image.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
 
 DEBUG = -g
@@ -14,21 +14,22 @@ DEBUG = -g
 
 # Build rules
 WDIR = build/win
-_WOBJS = $(OBJS) GL/glew.o win32.o win32.res
+_WOBJS = $(OBJS) glew.o win32.o win32.res
 WOBJS = $(patsubst %,$(WDIR)/%,$(_WOBJS))
 WINLIBS = -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
 LOCAL_LIB = -llib/win/openvr_api.lib
 LOCAL_DLL = lib/win/openvr_api.dll
 
+
 LDIR = build/lin
 LCC = clang
-_LOBJS = $(OBJS) GL/glew.o x11.o 
+_LOBJS = $(OBJS) glew.o x11.o 
 LOBJS = $(patsubst %,$(LDIR)/%,$(_LOBJS))
 LLIBS = ./lib/linux/libopenvr_api.so -lm -lGL -lX11 -lGLU -lXi -ldl
 
 MDIR = build/mac
 MCC = clang
-_MOBJS = $(OBJS)
+_MOBJS = $(OBJS) osx.o
 MFLAGS = -Wall
 MOBJS = $(patsubst %,$(MDIR)/%,$(_MOBJS))
 MLIBS = -F/System/Library/Frameworks -F. -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit ./lib/mac/libopenvr_api.dylib
@@ -93,11 +94,11 @@ endif
 endif
 
 
-$(WDIR)/Icon.ico: $(SDIR)/Icon.png
+$(WDIR)/Icon.ico: Icon.png
 	$(MAGICK) -resize 256x256 $^ $@
-$(WDIR)/win32.res: $(SDIR)/win32.rc $(WDIR)/Icon.ico
+$(WDIR)/win32.res: win32.rc $(WDIR)/Icon.ico
 	$(WINDRES) -I $(WDIR) -O coff src/win32.rc -o $@
-$(WDIR)/%.o: $(SDIR)/%.c
+$(WDIR)/%.o: %.c
 	$(WCC) $(DEBUG) $(CFLAGS) $(INCLUDES)-c $< -o $@
 openvr_api.dll:
 	cp lib/win/openvr_api.dll .
@@ -105,35 +106,35 @@ gui.exe: openvr_api.dll $(WOBJS)
 	$(WCC) $(DEBUG) $(WOBJS) $(WLIBS) -o $@
 
 # crazy stuff to get icons on x11
-$(LDIR)/x11icon: $(SDIR)/x11icon.c
+$(LDIR)/x11icon: x11icon.c
 	$(LCC) $^ -o $@
-$(LDIR)/icon.rgba: $(SDIR)/Icon.png
+$(LDIR)/icon.rgba: Icon.png
 	$(MAGICK) -resize 256x256 $^ $@
 #	magick convert -resize 256x256 $^ $@
 $(LDIR)/icon.argb: $(LDIR)/icon.rgba $(LDIR)/x11icon
 	./build/lin/x11icon < $(LDIR)/icon.rgba > $@
 $(LDIR)/icon.h: $(LDIR)/icon.argb
 	bin2h 13 < $^ > $@
-$(LDIR)/x11.o: $(SDIR)/x11.c $(LDIR)/icon.h
+$(LDIR)/x11.o: x11.c $(LDIR)/icon.h
 	$(LCC) $(CFLAGS) $(INCLUDES) -I$(LDIR) -c $< -o $@
-$(LDIR)/%.o: $(SDIR)/%.c
+$(LDIR)/%.o: %.c
 	$(LCC) $(DEBUG) $(CFLAGS) $(INCLUDES) -c $< -o $@
 gui: $(LOBJS)
 	$(LCC) $(DEBUG) $^ $(LLIBS) -o $@
 
 
 # generate the Apple Icon file from src/Icon.png
-$(MDIR)/AppIcon.iconset/icon_512x512@2x.png: src/Icon.png
+$(MDIR)/AppIcon.iconset/icon_512x512@2x.png: Icon.png
 	cp $^ $@
-$(MDIR)/AppIcon.iconset/icon_512x512.png: src/Icon.png
+$(MDIR)/AppIcon.iconset/icon_512x512.png: Icon.png
 	cp $^ $@
 	sips -Z 512 $@
 $(MDIR)/AppIcon.icns: $(MDIR)/AppIcon.iconset/icon_512x512@2x.png $(MDIR)/AppIcon.iconset/icon_512x512.png
 	iconutil -c icns $(MDIR)/AppIcon.iconset
 # build the Apple binary
-$(MDIR)/osx.o: $(SDIR)/osx.m
+$(MDIR)/%.o: %.m
 	$(MCC) $(MFLAGS) -c $< -o $@
-$(MDIR)/%.o: $(SDIR)/%.c
+$(MDIR)/%.o: %.c
 	$(MCC) $(DEBUG) $(CFLAGS) $(INCLUDES)-c $< -o $@
 gui.bin: $(MOBJS) $(MDIR)/osx.o
 	$(MCC) $(DEBUG) $^ $(MLIBS) -rpath @loader_path/ -o $@
