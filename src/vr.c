@@ -35,7 +35,7 @@ freely, subject to the following restrictions:
 //#include <windows.h>
 //#include <synchapi.h>
 void Sleep (int dwMilliseconds);
-#elif __APPLE__
+#else
 // #include <unistd.h>	// but it defines sleep() too
 int	usleep(unsigned int useconds);
 #endif

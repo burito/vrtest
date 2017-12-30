@@ -32,7 +32,7 @@ MCC = clang
 _MOBJS = $(OBJS) osx.o
 MFLAGS = -Wall
 MOBJS = $(patsubst %,$(MDIR)/%,$(_MOBJS))
-MLIBS = -F/System/Library/Frameworks -F. -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit ./lib/mac/libopenvr_api.dylib
+MLIBS = -F/System/Library/Frameworks -F. -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit ./lib/mac/OpenVR
 
 
 # Evil platform detection magic
@@ -142,14 +142,20 @@ gui.bin: $(MOBJS) $(MDIR)/osx.o
 # generate the Apple .app file
 gui.app/Contents/_CodeSignature/CodeResources: gui.bin src/Info.plist $(MDIR)/AppIcon.icns
 	rm -rf gui.app
-	mkdir -p gui.app/Contents/MacOS
-	mkdir gui.app/Contents/Resources
-	cp lib/mac/libopenvr_api.dylib gui.app/Contents/MacOS
-#	mkdir gui.app/Contents/Frameworks
-#	cp -av OpenVR.framework gui.app/Contents/Frameworks
-	cp gui.bin gui.app/Contents/MacOS/gui
+	mkdir -p gui.app/Contents
 	cp src/Info.plist gui.app/Contents
+	mkdir gui.app/Contents/MacOS
+	cp gui.bin gui.app/Contents/MacOS/gui
+	mkdir gui.app/Contents/Resources
 	cp $(MDIR)/AppIcon.icns gui.app/Contents/Resources
+#	cp -r data gui.app/Contents/MacOS
+#	install_name_tool -id @executable_path/../Frameworks/OpenVR.framework/Versions/A/OpenVR lib/mac/OpenVR
+	mkdir -p gui.app/Contents/Frameworks/OpenVR.framework/Versions/A/Resources
+	cp lib/mac/OpenVR gui.app/Contents/Frameworks/OpenVR.framework/Versions/A
+	cp lib/mac/Info.plist gui.app/Contents/Frameworks/OpenVR.framework/Versions/A/Resources
+	ln -s A gui.app/Contents/Frameworks/OpenVR.framework/Versions/Current
+#	ln -s Versions/Current/Resources gui.app/Contents/Frameworks/OpenVR.framework/Resources
+#	ln -s Versions/Current/OpenVR gui.app/Contents/Frameworks/OpenVR.framework/OpenVR
 #	codesign --force --sign - gui.app/Contents/Frameworks/OpenVR.framework
 	codesign --force --deep --sign - gui.app
 gui.app: gui.app/Contents/_CodeSignature/CodeResources

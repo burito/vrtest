@@ -71,7 +71,7 @@ int main_init(int argc, char *argv[])
 	shader_uniform(shader, "world");
 	shader_uniform(shader, "camera");
 
-	vr_init();
+//	vr_init();
 
 	return 0;   // it worked!
 }
@@ -123,7 +123,7 @@ void main_loop(void)
 	{
 		mat4x4 proj = mat4x4_identity();
 		proj = mat4x4_perspective(1, 30, 1, (float)vid_height / (float)vid_width);
-//		proj = mat4x4_orthographic(1, 30, 1, (float)vid_height / (float)vid_width);
+//		proj = mat4x4_orthographic(0.1, 30, 1, (float)vid_height / (float)vid_width);
 		mat4x4 camera = mat4x4_translate_float(0, 0, 0); // move the camera 1m above ground
 		render(camera, proj);
 	}
