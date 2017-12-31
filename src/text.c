@@ -124,5 +124,3 @@ char* loadTextFile(char *filename)
 	return buf;
 }
 
-#include "fast_atof.c"
-

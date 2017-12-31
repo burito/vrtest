@@ -7,7 +7,7 @@ endef
 
 CFLAGS = -std=c11 -Ilib/include
 VPATH = src lib
-OBJS = main.o text.o mesh.o image.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
+OBJS = main.o text.o fast_atof.o mesh.o image.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
 
 DEBUG = -g
 #DEBUG =

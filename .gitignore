@@ -12,13 +12,14 @@ gui
 gui.bin
 gui.app
 build
-./libopenvr_api.so
-./openvr_api.dll
+libopenvr_api.so
+openvr_api.dll
 *.xcodeproj
 # trash
 .*.swp
 *~
 .DS_Store
+.vs/
 
 # data files
 *.msh

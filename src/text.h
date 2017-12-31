@@ -29,5 +29,6 @@ int whitespace(char c);
 int eol(char c);
 char* loadTextFile(char *filename);
 
+// fast_atof.c
 double fast_atof(const char *p);
 
