@@ -21,7 +21,7 @@ freely, subject to the following restrictions:
    distribution.
 */
 
-//#define CVDISPLAYLINK		// or use an NSTimer
+#define CVDISPLAYLINK		// or use an NSTimer
 #define MODERN_OPENGL		// or use a GL2 context
 
 #import <Cocoa/Cocoa.h>
@@ -197,7 +197,6 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	}
 	main_loop();
 	[glcontext flushBuffer];
-	[glcontext updateIfNeeded];
 	CGLUnlockContext(context);
 //	ff_set();
 
