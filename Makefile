@@ -166,7 +166,7 @@ voxel.zip: gui.exe
 
 # Housekeeping
 clean:
-	@rm -rf build gui gui.exe gui.bin gui.app opengl.zip src/version.h openvr_api.dll gui.pdb gui.ilk
+	@rm -rf build gui gui.exe gui.bin gui.app opengl.zip src/version.h openvr_api.dll libopenvr_api.so gui.pdb gui.ilk
 
 # for QtCreator
 all: default

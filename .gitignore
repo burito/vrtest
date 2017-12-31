@@ -12,9 +12,9 @@ gui
 gui.bin
 gui.app
 build
+./libopenvr_api.so
 ./openvr_api.dll
 *.xcodeproj
-
 # trash
 .*.swp
 *~
