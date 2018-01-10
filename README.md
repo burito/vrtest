@@ -44,8 +44,8 @@ Credits
     * stb_image 2.16
 * ```lib/fast_atof.c``` - Tom Van Baak http://www.leapsecond.com/
 * ```lib/include/invert4x4_sse.h``` - https://github.com/niswegmann/small-matrix-inverse
-* ```lib/*openvr*``` - OpenVR 1.0.11 https://github.com/ValveSoftware/openvr
-    * Fix the typo on ```openvr_capi.h:1035```
+* ```lib/*openvr*``` - OpenVR 1.0.12 https://github.com/ValveSoftware/openvr
+    * Fix the typo on ```openvr_capi.h:1963``` from version 1.0.11
 * ```lib/*gl*``` - GLEW 2.1.0 http://glew.sourceforge.net/
     * Add ```#define GLEW_STATIC``` to the top of glew.h
 * ```data/stanford-bunny.obj``` - http://graphics.stanford.edu/data/3Dscanrep/
