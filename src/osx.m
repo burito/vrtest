@@ -22,7 +22,7 @@ freely, subject to the following restrictions:
 */
 
 #define CVDISPLAYLINK		// or use an NSTimer
-#define MODERN_OPENGL		// or use a GL2 context
+//#define MODERN_OPENGL		// or use a GL2 context
 
 #import <Cocoa/Cocoa.h>
 #import <IOKit/pwr_mgt/IOPMLib.h>	// to disable sleep
@@ -119,6 +119,8 @@ static NSWindow * window;
 static NSApplication * myapp;
 static int y_correction = 0;  // to correct mouse position for title bar
 
+extern char *key_names[];
+
 @interface MyOpenGLView : NSOpenGLView
 {
 #ifdef CVDISPLAYLINK
@@ -127,14 +129,63 @@ static int y_correction = 0;  // to correct mouse position for title bar
 	NSTimer * renderTimer;
 #endif
 }
+
+ -(BOOL)acceptsFirstResponder;
+ -(void)keyDown:(NSEvent*)theEvent;
+
 @end
 
 @implementation MyOpenGLView
+
+-(void)keyDown:(NSEvent *)theEvent
+{
+		keys[theEvent.keyCode] = 1;
+/*
+		int code = theEvent.keyCode;
+		if( code < 128 && code >= 0 )
+			printf("keydown = %s, %d\n", key_names[code], code);
+		else
+			printf("keydown unknown code=%d\n", code);
+*/
+}
+
+-(void)keyUp:(NSEvent *)theEvent
+{
+	keys[theEvent.keyCode] = 0;
+}
+
+-(void)flagsChanged:(NSEvent *)theEvent
+{
+//	printf("flagschanged\n");
+	for(int i = 0; i<24; i++)
+	{
+		int bit = !!(theEvent.modifierFlags & (1 << i));
+		switch(i) {
+		case   0: keys[KEY_LCONTROL] = bit; break;
+		case   1: keys[KEY_LSHIFT] = bit; break;
+		case   2: keys[KEY_RSHIFT] = bit; break;
+		case   3: keys[KEY_LLOGO] = bit; break;
+		case   4: keys[KEY_RLOGO] = bit; break;
+		case   5: keys[KEY_LALT] = bit; break;
+		case   6: keys[KEY_RALT] = bit; break;
+		case   8: break; // Always on?
+		case  13: keys[KEY_RCONTROL] = bit; break;
+		case  16: keys[KEY_CAPSLOCK] = bit; break;
+		case  17: break; // AllShift
+		case  18: break; // AllCtrl
+		case  19: break; // AllAlt
+		case  20: break; // AllLogo
+		case  23: keys[KEY_FN] = bit; break;
+		default: break;
+		}
+	}
+}
 
 -(BOOL)acceptsFirstResponder
 {
 	return YES;
 }
+
 
 -(void)reshape
 {
@@ -203,8 +254,9 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	mickey_x = mickey_y = 0;
 	if(killme)
 	{
-		[NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+		[NSApp terminate:nil];
 	}
+
 
 	if(fullscreen_toggle)
 	{
@@ -270,6 +322,8 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 {
 	return YES;
 }
+
+
 
 -(id)init
 {
@@ -562,6 +616,7 @@ void gamepadAction(void* inContext, IOReturn inResult,
 @interface MyApp : NSApplication
 {
 }
+
 @end
 
 
@@ -574,6 +629,7 @@ static void mouse_move(NSEvent * theEvent)
 }
 
 @implementation MyApp
+
 
 -(void)sendEvent:(NSEvent *)theEvent
 {
@@ -613,37 +669,6 @@ static void mouse_move(NSEvent * theEvent)
 	case NSEventTypeOtherMouseDragged:
 		mouse_move(theEvent);
 		break;
-
-	case NSEventTypeKeyDown:
-		bit = 1;
-	case NSEventTypeKeyUp:
-		keys[theEvent.keyCode] = bit;
-		break;
-	case NSEventTypeFlagsChanged:
-		for(int i = 0; i<24; i++)
-		{
-			bit = !!(theEvent.modifierFlags & (1 << i));
-			switch(i) {
-			case   0: keys[KEY_LCONTROL] = bit; break;
-			case   1: keys[KEY_LSHIFT] = bit; break;
-			case   2: keys[KEY_RSHIFT] = bit; break;
-			case   3: keys[KEY_LLOGO] = bit; break;
-			case   4: keys[KEY_RLOGO] = bit; break;
-			case   5: keys[KEY_LALT] = bit; break;
-			case   6: keys[KEY_RALT] = bit; break;
-			case   8: break; // Always on?
-			case  13: keys[KEY_RCONTROL] = bit; break;
-			case  16: keys[KEY_CAPSLOCK] = bit; break;
-			case  17: break; // AllShift
-			case  18: break; // AllCtrl
-			case  19: break; // AllAlt
-			case  20: break; // AllLogo
-			case  23: keys[KEY_FN] = bit; break;
-			default: break;
-			}
-		}
-		break;
-
 	case NSEventTypeScrollWheel:
 		break;
 
