@@ -102,6 +102,7 @@ mat4x4 mat4x4_translate_float(float x, float y, float z);
 mat4x4 mat4x4_perspective(float near, float far, float width, float height);
 mat4x4 mat4x4_orthographic(float near, float far, float width, float height);
 
+float vect_mag(vect v);
 vect vect_norm(vect v);
 float vect_dot(vect l, vect r);
 vect vect_cross(vect l, vect r);
@@ -122,6 +123,8 @@ mat4x4 mat4x4_sub_mat4x4(mat4x4 l, mat4x4 r);
 
 vect vect_mul_vect(vect l, vect r);
 vect vect_mul_float(vect l, float r);
+vect vect_div_vect(vect l, vect r);
+vect vect_div_float(vect l, float r);
 vect vect_add_vect(vect l, vect r);
 vect vect_add_float(vect l, float r);
 vect vect_sub_vect(vect l, vect r);
@@ -130,10 +133,12 @@ float float_mul(float l, float r);
 float float_add(float l, float r);
 float float_sub_float(float l, float r);
 vect float_sub_vect(float l, vect r);
+float float_div_float(float l, float r);
 
 int int_mul(int l, int r);
 int int_add(int l, int r);
 int int_sub(int l, int r);
+int int_div_int(int l, int r);
 
 #define mov(X) _Generic(X, \
 	HmdMatrix34_t: mat4x4_mov_HmdMatrix34, \
@@ -170,6 +175,13 @@ int int_sub(int l, int r);
 	default: int_sub \
 	)(X,Y)
 
+#define div(X,Y) _Generic(X, \
+	vect: _Generic(Y, \
+		vect: vect_div_vect,	\
+		default: vect_div_float), \
+	float: float_div_float, \
+	default: int_div_int \
+	)(X,Y)
 
 
 #endif /* __3DMATHS_H_ */

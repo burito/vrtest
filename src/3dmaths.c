@@ -157,6 +157,10 @@ mat4x4 mat4x4_orthographic(float near, float far, float width, float height)
 	return ret;
 }
 
+float vect_mag(vect v)
+{
+	return v.x*v.x + v.y*v.y + v.z*v.z;
+}
 
 vect vect_norm(vect v)
 {
@@ -252,6 +256,15 @@ vect vect_mul_vect(vect l, vect r)
 	return x;
 }
 
+vect vect_div_vect(vect l, vect r)
+{
+	vect x;
+	x.x = l.x / r.x;
+	x.y = l.y / r.y;
+	x.z = l.z / r.z;
+	return x;
+}
+
 vect vect_add_vect(vect l, vect r)
 {
 	vect x = { l.x + r.x, l.y + r.y, l.z + r.z };
@@ -276,6 +289,12 @@ vect vect_mul_float(vect l, float r)
 	return a;
 }
 
+vect vect_div_float(vect l, float r)
+{
+	vect a = {l.x/r, l.y/r, l.z/r};
+	return a;
+}
+
 
 int int_mul(int l, int r)
 {
@@ -292,6 +311,10 @@ int int_sub(int l, int r)
 	return l - r;
 }
 
+int int_div(int l, int r)
+{
+	return l / r;
+}
 
 float float_mul(float l, float r)
 {
@@ -306,6 +329,11 @@ float float_add(float l, float r)
 float float_sub_float(float l, float r)
 {
 	return l - r;
+}
+
+float float_div_float(float l, float r)
+{
+	return l / r;
 }
 
 vect float_sub_vect(float l, vect r)
