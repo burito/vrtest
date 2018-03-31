@@ -170,6 +170,12 @@ voxel.zip: gui.exe
 clean:
 	@rm -rf build gui gui.exe gui.bin gui.app opengl.zip src/version.h openvr_api.dll libopenvr_api.so gui.pdb gui.ilk
 
+help:
+	echo Possible targets are...
+	echo 	make 		# build the default target for the current platform
+	echo 	make clean	# remove intermediate build files
+	echo 	make help	# display this message
+
 # for QtCreator
 all: default
 

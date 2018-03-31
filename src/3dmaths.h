@@ -157,7 +157,7 @@ int int_div_int(int l, int r);
 #define mul(X,Y) _Generic(X, \
 	mat4x4: _Generic(Y, \
 		mat4x4: mat4x4_mul_mat4x4, \
-		vect: mat4x4_mul_vect), \
+		vect: mat4x4_mul_vect, \
 		default: mat4x4_mul_float), \
 	vect: _Generic(Y, \
 		vect: vect_mul_vect,	\
