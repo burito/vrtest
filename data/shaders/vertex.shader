@@ -1,4 +1,4 @@
-#version 410
+#version 410 core
 uniform mat4 world;
 uniform mat4 camera;
 layout(location = 0) in vec3 position;
