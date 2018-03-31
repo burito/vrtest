@@ -238,6 +238,23 @@ mat4x4 mat4x4_add_mat4x4(mat4x4 l, mat4x4 r)
 	return x;
 }
 
+mat4x4 mat4x4_add_float(mat4x4 l, float r)
+{
+	mat4x4 x;
+	for(int i=0; i<16; i++)
+		x.f[i] = l.f[i] + r;
+	return x;
+}
+
+mat4x4 mat4x4_mul_float(mat4x4 l, float r)
+{
+	mat4x4 x;
+	for(int i=0; i<16; i++)
+		x.f[i] = l.f[i] * r;
+	return x;
+}
+
+
 mat4x4 mat4x4_sub_mat4x4(mat4x4 l, mat4x4 r)
 {
 	mat4x4 x;

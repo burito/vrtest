@@ -73,6 +73,12 @@ typedef union {
  } vect;
 
 typedef union {
+	struct { float x, y, z, w; };
+	struct { vect xyz; float vw; };
+	float f[4];
+ } vec4;
+
+typedef union {
 	float f[16];
 	float m[4][4];
 } mat4x4;
@@ -119,6 +125,7 @@ mat4x4 mat4x4_mov_HmdMatrix44(HmdMatrix44_t x);
 mat4x4 mat4x4_mul_mat4x4(mat4x4 l, mat4x4 r);
 vect mat4x4_mul_vect(mat4x4 l, vect r);
 mat4x4 mat4x4_add_mat4x4(mat4x4 l, mat4x4 r);
+mat4x4 mat4x4_add_float(mat4x4 l, float r);
 mat4x4 mat4x4_sub_mat4x4(mat4x4 l, mat4x4 r);
 
 vect vect_mul_vect(vect l, vect r);
