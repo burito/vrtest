@@ -124,6 +124,7 @@ mat4x4 mat4x4_mov_HmdMatrix44(HmdMatrix44_t x);
 
 mat4x4 mat4x4_mul_mat4x4(mat4x4 l, mat4x4 r);
 vect mat4x4_mul_vect(mat4x4 l, vect r);
+mat4x4 mat4x4_mul_float(mat4x4 l, float r);
 mat4x4 mat4x4_add_mat4x4(mat4x4 l, mat4x4 r);
 mat4x4 mat4x4_add_float(mat4x4 l, float r);
 mat4x4 mat4x4_sub_mat4x4(mat4x4 l, mat4x4 r);
@@ -156,7 +157,8 @@ int int_div_int(int l, int r);
 #define mul(X,Y) _Generic(X, \
 	mat4x4: _Generic(Y, \
 		mat4x4: mat4x4_mul_mat4x4, \
-		default: mat4x4_mul_vect), \
+		vect: mat4x4_mul_vect), \
+		default: mat4x4_mul_float), \
 	vect: _Generic(Y, \
 		vect: vect_mul_vect,	\
 		default: vect_mul_float), \
@@ -165,7 +167,9 @@ int int_div_int(int l, int r);
 	)(X,Y)
 
 #define add(X,Y) _Generic(X, \
-	mat4x4: mat4x4_add_mat4x4, \
+	mat4x4: _Generic(Y, \
+		mat4x4: mat4x4_add_mat4x4, \
+		default: mat4x4_add_float), \
 	vect: _Generic(Y, \
 		vect: vect_add_vect, \
 		default:vect_add_float), \
