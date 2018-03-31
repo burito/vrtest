@@ -22,7 +22,7 @@ freely, subject to the following restrictions:
 */
 
 #define CVDISPLAYLINK		// or use an NSTimer
-//#define MODERN_OPENGL		// or use a GL2 context
+#define MODERN_OPENGL		// or use a GL2 context
 
 #import <Cocoa/Cocoa.h>
 #import <IOKit/pwr_mgt/IOPMLib.h>	// to disable sleep
