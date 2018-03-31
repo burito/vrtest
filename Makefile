@@ -137,6 +137,8 @@ $(MDIR)/%.o: %.m
 $(MDIR)/%.o: %.c
 	$(MCC) $(DEBUG) $(CFLAGS) $(INCLUDES)-c $< -o $@
 gui.bin: $(MOBJS) $(MDIR)/osx.o
+# the library has to have it's path before the executable is linked
+	install_name_tool -id @executable_path/../Frameworks/OpenVR.framework/Versions/A/OpenVR lib/mac/OpenVR
 	$(MCC) $(DEBUG) $^ $(MLIBS) -rpath @loader_path/ -o $@
 #	$(MCC) $^ $(MLIBS) -rpath @loader_path/../Frameworks -o $@
 # generate the Apple .app file
