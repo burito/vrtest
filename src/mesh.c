@@ -259,7 +259,7 @@ static void wf_bound(WF_OBJ *w)
 	}
 
 	size = sub(max, min);
-	float longest = F3MAX(size);
+	float longest = vmax(size);
 	mid = sub(longest, size);
 	mid = mul(mid, 0.5);
 //	longest = longest * (12.0 / 14.0);
@@ -449,7 +449,7 @@ static void wf_texcoords(WF_OBJ *w)
 
 	for(int i=0; i<w->nf; i++)
 	{
-		if(F2MAG(w->uv[w->f[i].f.x]) > 0.1)
+		if(mag(w->uv[w->f[i].f.x]) > 0.1)
 		{
 			uvcopy++;
 		}

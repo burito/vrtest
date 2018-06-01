@@ -11,6 +11,7 @@
         "shader.h": "c",
         "string.h": "c",
         "stdio.h": "c",
-        "synchapi.h": "c"
+        "synchapi.h": "c",
+        "stdlib.h": "c"
     }
 }

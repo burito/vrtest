@@ -40,7 +40,7 @@
                 "/usr/local/include",
                 "/usr/include/linux",
                 "/usr/lib/llvm-3.8/lib/clang/3.8.0/include",
-                "${workspaceRoot}/lib/include" 
+                "${workspaceRoot}/lib/include"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
@@ -73,8 +73,10 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         }
     ],
-    "version": 3
+    "version": 4
 }

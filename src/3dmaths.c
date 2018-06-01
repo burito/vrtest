@@ -157,10 +157,27 @@ mat4x4 mat4x4_orthographic(float near, float far, float width, float height)
 	return ret;
 }
 
+
+float coord_mag(coord c)
+{
+	return c.x*c.x + c.y*c.y;
+}
+
 float vect_mag(vect v)
 {
 	return v.x*v.x + v.y*v.y + v.z*v.z;
 }
+
+float coord_max(coord c)
+{
+	return c.x >= c.y ? c.x : c.y;
+}
+
+float vect_max(vect v)
+{
+	return (v.x>=v.y && v.x>=v.z) ? v.x : (v.y>=v.z?v.y:v.z);
+}
+
 
 vect vect_norm(vect v)
 {

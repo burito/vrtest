@@ -53,30 +53,25 @@ typedef struct byte4 {
 } byte4;
 
 
-#define F2MAG(X) X.x*X.x+X.y*X.y
-#define F3MAG(X) X.x*X.x+X.y*X.y+X.z*X.z
-#define F3MAX(D) ((D.x>=D.y && D.x>=D.z)?D.x:(D.y>=D.z?D.y:D.z))
-
-
 float finvsqrt(float x);
 
 typedef union {
 	struct { float x, y; };
 	float f[2];
- } coord;
+} coord;
 
 typedef union {
 	struct { float x, y, z; };
 	struct { coord xy; float fz; };
 	struct { float fx; coord yz; };
 	float f[3];
- } vect;
+} vect;
 
 typedef union {
 	struct { float x, y, z, w; };
 	struct { vect xyz; float vw; };
 	float f[4];
- } vec4;
+} vec4;
 
 typedef union {
 	float f[16];
@@ -108,7 +103,7 @@ mat4x4 mat4x4_translate_float(float x, float y, float z);
 mat4x4 mat4x4_perspective(float near, float far, float width, float height);
 mat4x4 mat4x4_orthographic(float near, float far, float width, float height);
 
-float vect_mag(vect v);
+
 vect vect_norm(vect v);
 float vect_dot(vect l, vect r);
 vect vect_cross(vect l, vect r);
@@ -116,8 +111,14 @@ vect vect_cross(vect l, vect r);
 
 /*
 The following functions are to be called via the 
-_Generic() macro's mov(), mul(), add() and sub()
+_Generic() macro's mag(), max(), mov(), mul(), add() and sub()
 */
+
+float coord_mag(coord c);
+float vect_mag(vect v);
+
+float coord_max(coord c);
+float vect_max(vect v);
 
 mat4x4 mat4x4_mov_HmdMatrix34(HmdMatrix34_t x);
 mat4x4 mat4x4_mov_HmdMatrix44(HmdMatrix44_t x);
@@ -147,6 +148,19 @@ int int_mul(int l, int r);
 int int_add(int l, int r);
 int int_sub(int l, int r);
 int int_div_int(int l, int r);
+
+// returns the magnitude of a vector
+#define mag(X) _Generic(X, \
+	coord: coord_mag, \
+	vect: vect_mag \
+	)(X)
+
+// returns the largest item in a vector
+#define vmax(X) _Generic(X, \
+	coord: coord_max, \
+	vect: vect_max \
+	)(X)
+
 
 #define mov(X) _Generic(X, \
 	HmdMatrix34_t: mat4x4_mov_HmdMatrix34, \
