@@ -21,6 +21,8 @@ freely, subject to the following restrictions:
    distribution.
 */
 
+#define GL_SILENCE_DEPRECATION
+
 #define CVDISPLAYLINK		// or use an NSTimer
 #define MODERN_OPENGL		// or use a GL2 context
 
@@ -203,7 +205,9 @@ extern char *key_names[];
 
 	[self setWantsBestResolutionOpenGLSurface:YES];   // enable retina resolutions
 	sys_dpi = [self.window backingScaleFactor];
-	[[self openGLContext] setValues:&vsync forParameter:NSOpenGLCPSwapInterval];
+//	[[self openGLContext] setValues:&vsync forParameter:NSOpenGLCPSwapInterval];
+	[[self openGLContext] setValues:&vsync forParameter:NSOpenGLContextParameterSwapInterval];
+
 #ifdef CVDISPLAYLINK
 	// Use a CVDisplayLink to do the render loop
 	CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
