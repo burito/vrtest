@@ -40,13 +40,13 @@ On Mac, it runs really horribly. I've tried using a very low poly model to mitig
 Credits
 -------
 
-* ```lib/*stb*``` - Sean Barret https://github.com/nothings/stb
+* ```deps/*stb*``` - Sean Barret https://github.com/nothings/stb
     * stb_image 2.19
-* ```lib/fast_atof.c``` - Tom Van Baak http://www.leapsecond.com/
-* ```lib/include/invert4x4_sse.h``` - https://github.com/niswegmann/small-matrix-inverse
-* ```lib/*openvr*``` - OpenVR 1.0.15 https://github.com/ValveSoftware/openvr
+* ```deps/fast_atof.c``` - Tom Van Baak http://www.leapsecond.com/
+* ```deps/include/invert4x4_sse.h``` - https://github.com/niswegmann/small-matrix-inverse
+* ```deps/*openvr*``` - OpenVR 1.0.15 https://github.com/ValveSoftware/openvr
     * Fix the typo on ```openvr_capi.h:2166``` from version 1.0.11
-* ```lib/*gl*``` - GLEW 2.1.0 http://glew.sourceforge.net/
+* ```deps/*gl*``` - GLEW 2.1.0 http://glew.sourceforge.net/
     * Add ```#define GLEW_STATIC``` to the top of glew.h
 * ```data/stanford-bunny.obj``` - http://graphics.stanford.edu/data/3Dscanrep/
 

@@ -5,8 +5,8 @@ Please read the instructions at...
 ...for help
 endef
 
-CFLAGS = -std=c11 -Ilib/include
-VPATH = src lib
+CFLAGS = -std=c11 -Ideps/include
+VPATH = src deps
 OBJS = main.o text.o fast_atof.o mesh.o image.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
 
 DEBUG = -g
@@ -17,22 +17,22 @@ WDIR = build/win
 _WOBJS = $(OBJS) glew.o win32.o win32.res
 WOBJS = $(patsubst %,$(WDIR)/%,$(_WOBJS))
 WINLIBS = -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
-LOCAL_LIB = -llib/win/openvr_api.lib
-LOCAL_DLL = lib/win/openvr_api.dll
+LOCAL_LIB = -ldeps/win/openvr_api.lib
+LOCAL_DLL = deps/win/openvr_api.dll
 
 
 LDIR = build/lin
 LCC = clang
 _LOBJS = $(OBJS) glew.o x11.o 
 LOBJS = $(patsubst %,$(LDIR)/%,$(_LOBJS))
-LLIBS = ./lib/linux/libopenvr_api.so -lm -lGL -lX11 -lGLU -lXi -ldl
+LLIBS = ./deps/linux/libopenvr_api.so -lm -lGL -lX11 -lGLU -lXi -ldl
 
 MDIR = build/mac
 MCC = clang
 _MOBJS = $(OBJS) osx.o
 MFLAGS = -Wall
 MOBJS = $(patsubst %,$(MDIR)/%,$(_MOBJS))
-MLIBS = -F/System/Library/Frameworks -F. -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit ./lib/mac/OpenVR
+MLIBS = -F/System/Library/Frameworks -F. -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit ./deps/mac/OpenVR
 
 
 # Evil platform detection magic
@@ -101,7 +101,7 @@ $(WDIR)/win32.res: win32.rc $(WDIR)/Icon.ico
 $(WDIR)/%.o: %.c
 	$(WCC) $(DEBUG) $(CFLAGS) $(INCLUDES)-c $< -o $@
 openvr_api.dll:
-	cp lib/win/openvr_api.dll .
+	cp deps/win/openvr_api.dll .
 gui.exe: openvr_api.dll $(WOBJS)
 	$(WCC) $(DEBUG) $(WOBJS) $(WLIBS) -o $@
 
@@ -138,7 +138,7 @@ $(MDIR)/%.o: %.c
 	$(MCC) $(DEBUG) $(CFLAGS) $(INCLUDES)-c $< -o $@
 gui.bin: $(MOBJS) $(MDIR)/osx.o
 # the library has to have it's path before the executable is linked
-	install_name_tool -id @executable_path/../Frameworks/OpenVR.framework/Versions/A/OpenVR lib/mac/OpenVR
+	install_name_tool -id @executable_path/../Frameworks/OpenVR.framework/Versions/A/OpenVR deps/mac/OpenVR
 	$(MCC) $(DEBUG) $^ $(MLIBS) -rpath @loader_path/ -o $@
 #	$(MCC) $^ $(MLIBS) -rpath @loader_path/../Frameworks -o $@
 # generate the Apple .app file
@@ -151,10 +151,10 @@ gui.app/Contents/_CodeSignature/CodeResources: gui.bin src/Info.plist $(MDIR)/Ap
 	mkdir gui.app/Contents/Resources
 	cp $(MDIR)/AppIcon.icns gui.app/Contents/Resources
 #	cp -r data gui.app/Contents/MacOS
-#	install_name_tool -id @executable_path/../Frameworks/OpenVR.framework/Versions/A/OpenVR lib/mac/OpenVR
+#	install_name_tool -id @executable_path/../Frameworks/OpenVR.framework/Versions/A/OpenVR deps/mac/OpenVR
 	mkdir -p gui.app/Contents/Frameworks/OpenVR.framework/Versions/A/Resources
-	cp lib/mac/OpenVR gui.app/Contents/Frameworks/OpenVR.framework/Versions/A
-	cp lib/mac/Info.plist gui.app/Contents/Frameworks/OpenVR.framework/Versions/A/Resources
+	cp deps/mac/OpenVR gui.app/Contents/Frameworks/OpenVR.framework/Versions/A
+	cp deps/mac/Info.plist gui.app/Contents/Frameworks/OpenVR.framework/Versions/A/Resources
 	ln -s A gui.app/Contents/Frameworks/OpenVR.framework/Versions/Current
 #	ln -s Versions/Current/Resources gui.app/Contents/Frameworks/OpenVR.framework/Resources
 #	ln -s Versions/Current/OpenVR gui.app/Contents/Frameworks/OpenVR.framework/OpenVR
