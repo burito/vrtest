@@ -1,7 +1,4 @@
 
-# version git hack
-src/version.h
-
 # compiler output
 *.o
 *.exe

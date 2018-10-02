@@ -6,8 +6,8 @@ Please read the instructions at...
 endef
 
 CFLAGS = -std=c11 -Ideps/include
-VPATH = src deps
-OBJS = main.o text.o fast_atof.o mesh.o image.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
+VPATH = src deps build
+OBJS = main.o version.o text.o fast_atof.o mesh.o image.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
 
 DEBUG = -g
 #DEBUG =
@@ -183,6 +183,9 @@ all: default
 $(shell	mkdir -p build/lin/GL build/win/GL build/mac/AppIcon.iconset)
 
 # create the version info
-$(shell echo "#define GIT_REV \"`git rev-parse --short HEAD`\"" > src/version.h)
-$(shell echo "#define GIT_TAG \"`git name-rev --tags --name-only \`git rev-parse HEAD\``\"" >> src/version.h)
-
+GIT_VERSION:=$(shell git describe --dirty --always --tags)
+VERSION:=const char git_version[] = "$(GIT_VERSION)";
+SRC_VERSION:=$(shell cat build/version.c 2>/dev/null)
+ifneq ($(SRC_VERSION),$(VERSION))
+$(shell echo '$(VERSION)' > build/version.c)
+endif
