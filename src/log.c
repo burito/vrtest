@@ -118,7 +118,7 @@ void log_out(char* file, int line, enum LOG_LEVEL level, char *fmt, ...)
 	tv.tv_sec = (uint64_t)now;
 
 #ifdef __APPLE__
-	printf( "%lld.%09ld %s ",
+	printf( "%lld.%09ld %s:%d %s ",
 #else
 	printf( "%ld.%09ld %s:%d %s ",
 #endif
