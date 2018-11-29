@@ -31,6 +31,8 @@ freely, subject to the following restrictions:
 #include <string.h>
 #include <openvr_capi.h>
 
+#include "log.h"
+
 #ifdef _WIN32
 //#define WIN32_LEAN_AND_MEAN
 //#include <windows.h>
@@ -124,7 +126,7 @@ void device_spam(int id)
 	OVR->GetStringTrackedDeviceProperty(id,
 		ETrackedDeviceProperty_Prop_RenderModelName_String,
 		device_name, 1024, &tp_error );
-	if(tp_error) printf("\nDeviceName:TP_Error = \"%s\"\n", OVR->GetPropErrorNameFromEnum(tp_error) );
+	if(tp_error) log_fatal("DeviceName:TP_Error = \"%s\"", OVR->GetPropErrorNameFromEnum(tp_error) );
 
 	class = OVR->GetTrackedDeviceClass(id);
 
@@ -141,25 +143,25 @@ void device_spam(int id)
 	
 
 
-	printf("%d:%c:%s:", id, class_letter, device_name);
+//	log_info("%d:%c:%s:", id, class_letter, device_name);
 
 	switch (class)
 	{
 	case ETrackedDeviceClass_TrackedDeviceClass_Controller:
 		role = OVR->GetInt32TrackedDeviceProperty(id, ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32, &tp_error );
-		if(tp_error) printf("\nRoleHint:TP_Error = \"%s\"\n", OVR->GetPropErrorNameFromEnum(tp_error) );
+		if(tp_error) log_warning("RoleHint:TP_Error = \"%s\"", OVR->GetPropErrorNameFromEnum(tp_error) );
 		switch(role) {
 		case ETrackedControllerRole_TrackedControllerRole_LeftHand:
-			printf("LeftHand:");
+			log_info("LeftHand:");
 			break;
 		case ETrackedControllerRole_TrackedControllerRole_RightHand:
-			printf("RightHand:");
+			log_info("RightHand:");
 			break;
 		case ETrackedControllerRole_TrackedControllerRole_Invalid:
-			printf("InvalidHand:");
+			log_info("InvalidHand:");
 			break;
 		default:
-			printf("UndocumentedHand:");
+			log_warning("UndocumentedHand:");
 			break;
 		}
 	
@@ -175,8 +177,6 @@ void device_spam(int id)
 	case ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect:
 		break;
 	}
-
-	printf("\n");
 }
 
 
@@ -195,7 +195,7 @@ void ovr_model_load( TrackedDeviceIndex_t di )
 		device_name, 1024, &tp_error );
 
 	int32_t role = OVR->GetInt32TrackedDeviceProperty(di, ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32, &tp_error );
-	printf("device_name = \"%s\", %d, %d\n", device_name, di, role);
+	log_info("device_name = \"%s\", %d, %d", device_name, di, role);
 
 	switch(role) {
 	case ETrackedControllerRole_TrackedControllerRole_LeftHand:
@@ -225,7 +225,7 @@ void ovr_model_load( TrackedDeviceIndex_t di )
 
 	if(rm_error != EVRRenderModelError_VRRenderModelError_None)
 	{
-		printf("LoadRenderModel_Async(\"%s\"): %s\n", ovr_models[ovr_model_count].name, OVRM->GetRenderModelErrorNameFromEnum(rm_error) );
+		log_fatal("LoadRenderModel_Async(\"%s\"): %s", ovr_models[ovr_model_count].name, OVRM->GetRenderModelErrorNameFromEnum(rm_error) );
 	}
 	RenderModel_TextureMap_t *ovr_texture = NULL;
 
@@ -238,7 +238,7 @@ void ovr_model_load( TrackedDeviceIndex_t di )
 
 	if(rm_error != EVRRenderModelError_VRRenderModelError_None)
 	{
-		printf("LoadRenderModel_Async(\"%s\"): %s\n", ovr_models[ovr_model_count].name, OVRM->GetRenderModelErrorNameFromEnum(rm_error) );
+		log_fatal("LoadRenderModel_Async(\"%s\"): %s", ovr_models[ovr_model_count].name, OVRM->GetRenderModelErrorNameFromEnum(rm_error) );
 	}
 
 	GLuint va, vb, eab, tex, vcount;
@@ -347,7 +347,7 @@ bool CreateFrameBuffer( int nWidth, int nHeight, struct FramebufferDesc *framebu
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
-		printf("framebuffer1 creation failed: %s\n", glErrorFb(status));
+		log_error("framebuffer1 creation failed: %s", glErrorFb(status));
 		return 1;
 	}
 
@@ -365,7 +365,7 @@ bool CreateFrameBuffer( int nWidth, int nHeight, struct FramebufferDesc *framebu
 	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
-		printf("framebuffer2 creation failed\n");
+		log_error("framebuffer2 creation failed");
 		return 1;
 	}
 
@@ -385,26 +385,27 @@ void hmd_eye_calc(EVREye eye, mat4x4 * dest_pose, mat4x4 *dest_proj)
 }
 
 
-void vr_init(void)
+int vr_init(void)
 {
 	EVRInitError eError;
 
 	if( !VR_IsHmdPresent() )
 	{
-		printf("VR Headset is not present\n");
+		log_warning("VR Headset is not present");
+		return 1;
 	}
 	
 	if( !VR_IsRuntimeInstalled() )
 	{
-		printf("VR Runtime is not installed\n");
-		return;
+		log_warning("VR Runtime is not installed");
+		return 1;
 	}
 	
 	uint32_t vrToken = VR_InitInternal(&eError, EVRApplicationType_VRApplication_Scene);
 	if (eError != EVRInitError_VRInitError_None)
 	{
-		printf("VR_InitInternal: %s\n", VR_GetVRInitErrorAsSymbol(eError));
-		return;
+		log_fatal("VR_InitInternal: %s", VR_GetVRInitErrorAsSymbol(eError));
+		return 2;
 	}
 
 	char fnTableName[128];
@@ -413,24 +414,24 @@ void vr_init(void)
 	OVR = (struct VR_IVRSystem_FnTable *)VR_GetGenericInterface(fnTableName, &eError);
 	if (eError != EVRInitError_VRInitError_None)
 	{
-		printf("VR_GetGenericInterface(\"%s\"): %s\n", IVRSystem_Version, VR_GetVRInitErrorAsSymbol(eError));
-		return;
+		log_fatal("VR_GetGenericInterface(\"%s\"): %s", IVRSystem_Version, VR_GetVRInitErrorAsSymbol(eError));
+		return 2;
 	}
 
 	result1 = sprintf(fnTableName, "FnTable:%s", IVRCompositor_Version);
 	OVRC = (struct VR_IVRCompositor_FnTable *)VR_GetGenericInterface(fnTableName, &eError);
 	if (eError != EVRInitError_VRInitError_None)
 	{
-		printf("VR_GetGenericInterface(\"%s\"): %s\n", IVRCompositor_Version, VR_GetVRInitErrorAsSymbol(eError));
-		return;
+		log_fatal("VR_GetGenericInterface(\"%s\"): %s", IVRCompositor_Version, VR_GetVRInitErrorAsSymbol(eError));
+		return 2;
 	}
 
 	result1 = sprintf(fnTableName, "FnTable:%s", IVRRenderModels_Version);
 	OVRM = (struct VR_IVRRenderModels_FnTable *)VR_GetGenericInterface(fnTableName, &eError );
 	if (eError != EVRInitError_VRInitError_None)
 	{
-		printf("VR_GetGenericInterface(\"%s\"): %s\n", IVRRenderModels_Version, VR_GetVRInitErrorAsSymbol(eError));
-		return;
+		log_fatal("VR_GetGenericInterface(\"%s\"): %s", IVRRenderModels_Version, VR_GetVRInitErrorAsSymbol(eError));
+		return 2;
 	}
 
 	// Get hmd position matrices
@@ -443,9 +444,9 @@ void vr_init(void)
 /*
 	bool result2 = OVR->IsDisplayOnDesktop();
 	if (result2)
-		printf("Display is on desktop\n");
+		log_warning("Display is on desktop");
 	else
-		printf("Display is NOT on desktop\n");
+		log_warning("Display is NOT on desktop");
 */
 
 	if(!leftEyeDesc.m_nDepthBufferId)
@@ -515,7 +516,7 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	{
 		switch(vre.eventType) {
 			case EVREventType_VREvent_TrackedDeviceActivated:
-//				printf("device activated - load a model here\n");
+//				log_info("device activated - load a model here");
 				break;
 			case EVREventType_VREvent_TrackedDeviceDeactivated:
 				if( vre.trackedDeviceIndex == controller_left_id )
@@ -528,10 +529,10 @@ void vr_loop( void render(mat4x4, mat4x4) )
 					m_rDevClassChar[controller_right_id]=0;
 					controller_right_id = -1;
 				}
-//				printf("device deactivated\n");
+//				log_info("device deactivated");
 				break;
 			case EVREventType_VREvent_TrackedDeviceUpdated:
-//				printf("device updated\n");
+//				log_info("device updated");
 				break;
 		}
 	}
@@ -542,9 +543,9 @@ void vr_loop( void render(mat4x4, mat4x4) )
 		struct VRControllerState_t state;
 		if( OVR->GetControllerState( unDevice, &state, sizeof(state) ) )
 		{
-		//	printf(" it equals \"%d\"\n", state.ulButtonPressed );
+		//	log_debug(" it equals \"%d\"", state.ulButtonPressed );
 		// it tracks buttons at least
-			//printf(" it equals 0?\n");
+			//log_debug(" it equals 0?");
 
 		}
 	}
@@ -555,7 +556,7 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	m_iValidPoseCount = 0;
 	m_strPoseClasses[0] = 0;
 
-	printf("begin device spam\n");
+//	log_info("begin device spam");
 
 	for(int nDevice = 0; nDevice < 16; nDevice++)
 	if(m_rTrackedDevicePose[nDevice].bPoseIsValid)
@@ -583,7 +584,7 @@ void vr_loop( void render(mat4x4, mat4x4) )
 /*				// Doesn't tell you which hand the controller is
 				ETrackedPropertyError tp_error;
 				int32_t role = OVR->GetInt32TrackedDeviceProperty(nDevice, ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32, &tp_error );
-				printf("device_name = %d, %d\n", nDevice, role);
+				log_info("device_name = %d, %d", nDevice, role);
 
 				switch(role) {
 				case ETrackedControllerRole_TrackedControllerRole_LeftHand:
@@ -604,11 +605,11 @@ void vr_loop( void render(mat4x4, mat4x4) )
 			default:                                       m_rDevClassChar[nDevice] = '?'; break;
 			}
 		}
-//		printf("%c", m_rDevClassChar[nDevice]);
+//		log_debug("%c", m_rDevClassChar[nDevice]);
 		m_strPoseClasses[nDevice] += m_rDevClassChar[nDevice];
 	}
-//	printf(" - %d, %d\n", m_iValidPoseCount, controller_id);
-	printf("end device spam\n");
+//	log_debug(" - %d, %d", m_iValidPoseCount, controller_id);
+//	log_info("end device spam");
 	if ( m_rTrackedDevicePose[k_unTrackedDeviceIndex_Hmd].bPoseIsValid )
 	{
 		hmdPose = mat4x4_invert(vrdevice_poses[k_unTrackedDeviceIndex_Hmd]);

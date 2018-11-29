@@ -35,6 +35,8 @@ freely, subject to the following restrictions:
 #include <OpenGL/gl3.h>
 #include <sys/time.h>
 
+#include "log.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 //////// Public Interface to the rest of the program
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,13 +67,13 @@ int main_init(int argc, const char *argv[]);
 void main_loop(void);
 void main_end(void);
 
-const int sys_ticksecond = 1000000;
-long long sys_time(void)
+const uint64_t sys_ticksecond = 1000000000;
+static uint64_t sys_time_start = 0;
+uint64_t sys_time(void)
 {
-	struct timeval tv;
-	tv.tv_usec = 0;	// tv.tv_sec = 0;
-	gettimeofday(&tv, NULL);
-	return tv.tv_usec + tv.tv_sec * sys_ticksecond;
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+	return (ts.tv_sec * 1000000000 + ts.tv_nsec) - sys_time_start;
 }
 
 void shell_browser(char *url)
@@ -145,9 +147,9 @@ extern char *key_names[];
 /*
 		int code = theEvent.keyCode;
 		if( code < 128 && code >= 0 )
-			printf("keydown = %s, %d\n", key_names[code], code);
+			log_debug("keydown = %s, %d", key_names[code], code);
 		else
-			printf("keydown unknown code=%d\n", code);
+			log_debug("keydown unknown code=%d", code);
 */
 }
 
@@ -158,7 +160,7 @@ extern char *key_names[];
 
 -(void)flagsChanged:(NSEvent *)theEvent
 {
-//	printf("flagschanged\n");
+//	log_debug("flagschanged");
 	for(int i = 0; i<24; i++)
 	{
 		int bit = !!(theEvent.modifierFlags & (1 << i));
@@ -510,7 +512,7 @@ void gamepadWasAdded(void* inContext, IOReturn inResult, void* inSender, IOHIDDe
 		joy[i].connected = 1;
 		return;
 	}
-	printf("More than 4 joysticks plugged in\n");
+	log_debug("More than 4 joysticks plugged in");
 }
 
 void gamepadWasRemoved(void* inContext, IOReturn inResult, void* inSender, IOHIDDeviceRef device)
@@ -523,7 +525,7 @@ void gamepadWasRemoved(void* inContext, IOReturn inResult, void* inSender, IOHID
 		joy[i].connected = 0;
 		return;
 	}
-	printf("Unexpected Joystick unplugged\n");
+	log_debug("Unexpected Joystick unplugged");
 }
 
 // https://developer.apple.com/library/mac/documentation/DeviceDrivers/Conceptual/HID/new_api_10_5/tn2187.html#//apple_ref/doc/uid/TP40000970-CH214-SW2
@@ -551,7 +553,7 @@ void gamepadAction(void* inContext, IOReturn inResult,
 	}
 	if(i == -1)
 	{
-		printf("Unexpected joystick event = %p\n", inSender);
+		log_debug("Unexpected joystick event = %p", inSender);
 		return;
 	}
 	// page == 1 = axis
@@ -595,7 +597,7 @@ void gamepadAction(void* inContext, IOReturn inResult,
 	case -1: // Gets fired occasionally on connect
 		break;
 	default:
-		printf("usage = %d, page = %d, value = %d\n", usage, page, (int)value);
+		log_debug("usage = %d, page = %d, value = %d", usage, page, (int)value);
 		break;
 	}
 }
@@ -662,7 +664,7 @@ static void mouse_move(NSEvent * theEvent)
 		case 5: mouse[5] = bit; break;
 		case 6: mouse[6] = bit; break;
 		case 7: mouse[7] = bit; break;
-		default: printf("Unexpected Mouse Button %d\n", (int)theEvent.buttonNumber); break;
+		default: log_debug("Unexpected Mouse Button %d", (int)theEvent.buttonNumber); break;
 		}
 		mouse_move(theEvent);
 		break;

@@ -36,6 +36,8 @@ freely, subject to the following restrictions:
 
 #include "image.h"
 #include "text.h"
+#include "log.h"
+
 
 
 static void img_glinit(IMG *img)
@@ -91,7 +93,7 @@ void img_free(IMG *img)
 
 IMG* img_load(const char * filename)
 {
-	printf("Loading Image(\"%s\")\n", filename);
+	log_info("Loading Image(\"%s\")", filename);
 	const int size = sizeof(IMG);
 	IMG *i = malloc(size);
 	if(!i)return 0;
@@ -116,18 +118,18 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	printf("Loading file \"%s\"\n", argv[1]);
+	log_info("Loading file \"%s\"", argv[1]);
 
 	i = img_load(argv[1]);
 
 	if(!i)
 	{
-		printf("Failed to load.\n");
+		log_fatal("Failed to load.");
 		return 2;
 	}
 
 	img_free(i);
-	printf("Happily free.\n");
+	log_info("Happily free.");
 	return 0;
 }
 

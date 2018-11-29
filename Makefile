@@ -7,7 +7,7 @@ endef
 
 CFLAGS = -std=c11 -Ideps/include
 VPATH = src deps build
-OBJS = main.o version.o text.o fast_atof.o mesh.o image.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
+OBJS = main.o version.o text.o fast_atof.o mesh.o image.o log.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
 
 DEBUG = -g
 #DEBUG =
@@ -17,7 +17,7 @@ WDIR = build/win
 _WOBJS = $(OBJS) glew.o win32.o win32.res
 WOBJS = $(patsubst %,$(WDIR)/%,$(_WOBJS))
 WINLIBS = -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
-LOCAL_LIB = -ldeps/win/openvr_api.lib
+LOCAL_LIB = deps/win/openvr_api.dll
 LOCAL_DLL = deps/win/openvr_api.dll
 
 
@@ -73,7 +73,7 @@ WCC := clang -target x86_64-pc-windows-gnu
 else
 	ifdef VS120COMNTOOLS # we have MSVC 2017 installed
 		WLIBS = $(LOCAL_LIB) $(WINLIBS)
-		WCC = clang
+		WCC = gcc
 	else
 		WLIBS = $(LOCAL_DLL) $(WINLIBS)
 		ifeq (,$(findstring which, $(shell which clang 2>&1))) # clang present?

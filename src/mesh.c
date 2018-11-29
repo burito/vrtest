@@ -38,6 +38,7 @@ freely, subject to the following restrictions:
 #include "mesh.h"
 #include "glerror.h"
 #include "text.h"
+#include "log.h"
 
 #define BUF_LEN 1024
 
@@ -171,7 +172,8 @@ static WF_MTL* mtl_newmtl(char *hostpath, FILE *fptr, char *name)
 			default:  targeti = NULL; break;
 			}
 			if(!targeti)break;
-			while(!whitespace(buf[i]))i++;i++;
+			while(!whitespace(buf[i]))i++;
+			i++;
 			path = repath(hostpath, buf+i);
 			*targeti = img_load(path);
 			free(path);
@@ -198,10 +200,11 @@ static void mtl_load(WF_OBJ *w, char *filename)
 	if(!filename)return;
 	if(!w->filename)return;
 	char *filepath = repath(w->filename, filename);
-	printf("Loading Wavefront MTL(\"%s\");\n", filepath);
+	log_info("Loading Wavefront MTL(\"%s\");", filepath);
 	FILE *fptr = fopen(filepath, "r");
 	if(!fptr)
 	{
+		log_error("fopen(\"%s\")", filepath);
 		free(filepath);
 		return;
 	}
@@ -273,7 +276,7 @@ static void wf_bound(WF_OBJ *w)
 		v[i] = add(v[i], (1.0 / 14.0));
 	}
 
-	printf("Volume = (%f, %f, %f)\n", size.x, size.y, size.z);
+	log_debug("Volume = (%f, %f, %f)", size.x, size.y, size.z);
 }
 
 
@@ -281,7 +284,7 @@ static void wf_bound(WF_OBJ *w)
 void wf_interleave(WF_OBJ *w)
 {
 	if(!w)return;
-	printf("At interleave we have %d/%d/%d\n", w->nv, w->nn, w->nt);
+	log_debug("At interleave we have %d/%d/%d", w->nv, w->nn, w->nt);
 	if(!w->nv)return;
 	float *p = malloc(w->nv * 32);
 	if(!p)return;
@@ -310,7 +313,7 @@ void wf_interleave(WF_OBJ *w)
 
 		}
 	}
-	printf("Interleaved ok!\n");
+	log_debug("Interleaved ok!");
 	w->p = p;
 
 	// now store the faces, per material for fast rendering
@@ -333,7 +336,7 @@ void wf_interleave(WF_OBJ *w)
 	if(w->f[i].m == 0)
 		f[o++] = w->f[i].f;
 	w->vf = f;
-	printf("Interleaved faces ok!\n");
+	log_debug("Interleaved faces ok!");
 //	free(w->v); w->v = 0;
 //	free(w->vn); w->vn = 0;
 }
@@ -402,7 +405,7 @@ static void wf_vertex_normals(WF_OBJ *w)
 	{
 		tmp = vert[i].next;
 		if(!tmp)continue;
-		vect t = {0,0,0};
+		vect t = {.f={0,0,0}};
 		while(tmp)
 		{
 			t = add(t, w->f[tmp->face].normal);
@@ -458,7 +461,7 @@ static void wf_texcoords(WF_OBJ *w)
 		w->uv[w->f[i].f.y] = w->vt[w->f[i].t.y].xy;
 		w->uv[w->f[i].f.z] = w->vt[w->f[i].t.z].xy;
 	}
-	printf("UV's copied, wanted %d verts.\n", uvcopy);
+	log_debug("UV's copied, wanted %d verts", uvcopy);
 }
 
 
@@ -504,9 +507,13 @@ void wf_draw(WF_OBJ *w)
 
 WF_OBJ* wf_parse(char *filename)
 {
-	printf("Loading Wavefront OBJ(\"%s\");\n", filename);
+	log_info("Loading Wavefront OBJ(\"%s\");", filename);
 	FILE *fptr = fopen(filename, "r");
-	if(!fptr)return 0;
+	if(!fptr)
+	{
+		log_error("fopen(\"%s\")", filename);
+		return 0;
+	}
 
 	char buf[1024];
 	int i;
@@ -516,7 +523,7 @@ WF_OBJ* wf_parse(char *filename)
 	if(!w)
 	{
 		fclose(fptr);
-		printf("wf_parse() malloc failed\n");
+		log_warning("wf_parse() malloc failed");
 		return 0;
 	}
 	memset(w, 0, sizeof(WF_OBJ));
@@ -572,7 +579,7 @@ WF_OBJ* wf_parse(char *filename)
 	if(w->ng)w->groups = malloc(sizeof(char*)*w->ng);
 	if(w->ns)w->sgroups = malloc(sizeof(int)*w->ns);
 
-	printf("Counted v=%d,t=%d,n=%d,f=%d,g=%d,s=%d,m=%d\n",
+	log_debug("Counted v=%d,t=%d,n=%d,f=%d,g=%d,s=%d,m=%d",
 			w->nv, w->nt, w->nn, w->nf, w->ng, w->ns, w->nm);
 	int vi=0, ti=0, ni=0, fi=0, gi=0, si=0;
 	WF_MTL *mi=0;
@@ -589,7 +596,7 @@ WF_OBJ* wf_parse(char *filename)
 	{
 		tailchomp(buf);
 		int i=2;
-//		printf("%s\n", buf);
+//		log_trace("%s", buf);
 		switch(buf[0]) {
 		case 'v':
 
@@ -609,11 +616,13 @@ WF_OBJ* wf_parse(char *filename)
 
 			while(' '==buf[i])i++;
 			target->x = fast_atof(buf+i);
-			while(' '!=buf[i])i++; i++;
+			while(' '!=buf[i])i++;
+			i++;
 			target->y = fast_atof(buf+i);
 			if(buf[1]!='t')
 			{
-				while(' '!=buf[i])i++; i++;
+				while(' '!=buf[i])i++;
+				i++;
 				target->z = fast_atof(buf+i);
 			}
 			else
@@ -656,19 +665,21 @@ WF_OBJ* wf_parse(char *filename)
 				else tmp--;
 				w->f[fi].f.x = tmp;
 
-//					printf("%d/", g->f[g->nf].x);
-				while(' '!=buf[i])i++; i++;	//find next space
+//					log_trace("%d/", g->f[g->nf].x);
+				while(' '!=buf[i])i++;
+				i++;	//find next space
 				tmp = atoi(buf+i);
 				if(tmp < 0)tmp += w->nv;
 				else tmp--;
 				w->f[fi].f.y = tmp;
-//					printf("%d/", g->f[g->nf].y);
-				while(' '!=buf[i])i++; i++;
+//					log_trace("%d/", g->f[g->nf].y);
+				while(' '!=buf[i])i++;
+				i++;
 				tmp = atoi(buf+i);
 				if(tmp < 0)tmp += w->nv;
 				else tmp--;
 				w->f[fi].f.z = tmp;
-//					printf("%d\n", g->f[g->nf].z);
+//					log_trace("%d", g->f[g->nf].z);
 				w->f[fi].s = si;
 				w->f[fi].m = lastmat;
 				w->f[fi].g = gi;
@@ -703,35 +714,40 @@ WF_OBJ* wf_parse(char *filename)
 				if(tmp < 0)tmp += w->nv;
 				else tmp--;
 				w->f[fi].f.x = tmp;
-				while('/'!=buf[i])i++; i++;	//find next slash
+				while('/'!=buf[i])i++;
+				i++;	//find next slash
 				tmp = atoi(buf+i);
 				if(tmp < 0)tmp += w->nt;
 				else tmp--;
 				w->f[fi].t.x = tmp;
 
-//					printf("%d/", g->f[g->nf].x);
-				while(' '!=buf[i])i++; i++;	//find next space
+//					log_debug("%d/", g->f[g->nf].x);
+				while(' '!=buf[i])i++;
+				i++;	//find next space
 				tmp = atoi(buf+i);
 				if(tmp < 0)tmp += w->nv;
 				else tmp--;
 				w->f[fi].f.y = tmp;
-				while('/'!=buf[i])i++; i++;	//find next slash
+				while('/'!=buf[i])i++;
+				i++;	//find next slash
 				tmp = atoi(buf+i);
 				if(tmp < 0)tmp += w->nt;
 				else tmp--;
 				w->f[fi].t.y = tmp;
-//					printf("%d/", g->f[g->nf].y);
-				while(' '!=buf[i])i++; i++;
+//					log_debug("%d/", g->f[g->nf].y);
+				while(' '!=buf[i])i++;
+				i++;
 				tmp = atoi(buf+i);
 				if(tmp < 0)tmp += w->nv;
 				else tmp--;
 				w->f[fi].f.z = tmp;
-				while('/'!=buf[i])i++; i++;	//find next slash
+				while('/'!=buf[i])i++;
+				i++;	//find next slash
 				tmp = atoi(buf+i);
 				if(tmp < 0)tmp += w->nt;
 				else tmp--;
 				w->f[fi].t.z = tmp;
-//					printf("%d\n", g->f[g->nf].z);
+//					log_debug("%d", g->f[g->nf].z);
 				w->f[fi].s = si;
 				w->f[fi].m = lastmat;
 				w->f[fi].g = gi;
@@ -754,7 +770,8 @@ WF_OBJ* wf_parse(char *filename)
 						if(tmp < 0) tmp += w->nv;
 						else tmp--;
 						w->f[fi].f.z = tmp;
-						while('/'!=buf[i])i++; i++;	//find next slash
+						while('/'!=buf[i])i++;
+						i++;	//find next slash
 						tmp = atoi(buf+i);
 						if(tmp < 0)tmp += w->nt;
 						else tmp--;
@@ -771,21 +788,26 @@ WF_OBJ* wf_parse(char *filename)
 				break;
 		case 3:
 				w->f[fi].f.x = abs(atoi(buf+i))-1;
-				while('/'!=buf[i])i++; i++;
+				while('/'!=buf[i])i++;
+				i++;
 				if(buf[i]!='/')w->f[fi].t.x = abs(atoi(buf+i))-1;
 //				while('/'!=buf[i])i++; i++;
 //				if(buf[i]!=' ')w->f[fi].n.x = abs(atoi(buf+i))-1;
 
-				while(' '!=buf[i])i++; i++;	//find next space
+				while(' '!=buf[i])i++;
+				i++;	//find next space
 				w->f[fi].f.y = abs(atoi(buf+i))-1;
-				while('/'!=buf[i])i++; i++;
+				while('/'!=buf[i])i++;
+				i++;
 				if(buf[i]!='/')w->f[fi].t.y = abs(atoi(buf+i))-1;
 //				while('/'!=buf[i])i++; i++;
 //				if(buf[i]!=' ')w->f[fi].n.y = abs(atoi(buf+i))-1;
 
-				while(' '!=buf[i])i++; i++;	//find next space
+				while(' '!=buf[i])i++;
+				i++;	//find next space
 				w->f[fi].f.z = abs(atoi(buf+i))-1;
-				while('/'!=buf[i])i++; i++;
+				while('/'!=buf[i])i++;
+				i++;
 				if(buf[i]!='/')w->f[fi].t.z = abs(atoi(buf+i))-1;
 //				while('/'!=buf[i])i++; i++;
 //				if(buf[i]!=' ')w->f[fi].n.z = abs(atoi(buf+i))-1;
@@ -810,7 +832,8 @@ WF_OBJ* wf_parse(char *filename)
 						w->f[fi].t.y = w->f[last].t.z;
 						w->f[fi].n.y = w->f[last].n.z;
 				w->f[fi].f.z = abs(atoi(buf+i))-1;
-				while('/'!=buf[i])i++; i++;
+				while('/'!=buf[i])i++;
+				i++;
 				if(buf[i]!='/')w->f[fi].t.z = abs(atoi(buf+i))-1;
 //				while('/'!=buf[i])i++; i++;
 //				if(buf[i]!=' ')w->f[fi].n.z = abs(atoi(buf+i))-1;
@@ -829,11 +852,11 @@ WF_OBJ* wf_parse(char *filename)
 			break;	// line type break
 		}
 	}
-	printf("Read    v=%d,t=%d,n=%d,f=%d,g=%d,s=%d\n",
+	log_debug("Read    v=%d,t=%d,n=%d,f=%d,g=%d,s=%d",
 			vi, ti, ni, fi, gi, si);
 
 	fclose(fptr);
-	printf("At fclose we have %d/%d/%d\n", w->nv, w->nt, w->nn);
+	log_debug("At fclose we have %d/%d/%d", w->nv, w->nt, w->nn);
 	return w;
 }
 
@@ -851,7 +874,7 @@ WF_OBJ* wf_load(char * filename)
 	wf_gpu_load(w);
 	w->draw = wf_draw;
 
-	printf("All done.\n");
+	log_debug("All done");
 	return w;
 }
 
@@ -891,7 +914,7 @@ int main(int argc, char *argv[])
 			wf_free(w);
 			break;
 		default:
-			printf("user error.\n");
+			log_fatal("user error");
 			return 1;
 	}
 
