@@ -500,6 +500,7 @@ int vr_init(void)
 	}
 
 	vr_using = 1;
+	return 0;
 }
 
 void vr_end(void)
