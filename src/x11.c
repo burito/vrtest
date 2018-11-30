@@ -21,6 +21,8 @@ freely, subject to the following restrictions:
    distribution.
 */
 
+#define _XOPEN_SOURCE 700	// for CLOCK_MONOTONIC_RAW
+#include <time.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -28,7 +30,6 @@ freely, subject to the following restrictions:
 
 #include <linux/input.h>
 
-#include <sys/time.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -40,6 +41,8 @@ freely, subject to the following restrictions:
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+#include "log.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //////// Public Interface to the rest of the program
