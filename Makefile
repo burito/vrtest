@@ -32,7 +32,7 @@ MCC = clang
 _MOBJS = $(OBJS) osx.o
 MFLAGS = -Wall
 MOBJS = $(patsubst %,$(MDIR)/%,$(_MOBJS))
-MLIBS = -F/System/Library/Frameworks -F. -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit ./deps/mac/OpenVR
+MLIBS = -F/System/Library/Frameworks -F. -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit -Ldeps/mac -lopenvr_api -rpath .
 
 
 # Evil platform detection magic
@@ -123,44 +123,70 @@ gui: $(LOBJS)
 	$(LCC) $(DEBUG) $^ $(LLIBS) -o $@
 
 
+
+$(MDIR)/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(MDIR)/%.o: %.m
+	$(CC) $(CFLAGS) -c $< -o $@
+
+libopenvr_api.dylib: deps/mac/libopenvr_api.dylib
+	cp $< $@
+
+
+gui.bin: $(MOBJS) libopenvr_api.dylib
+	$(CC) $(CFLAGS) $(MLIBS) $^ -o $@
+
+
+# start build the App Bundle (apple)
+MAC_BUNDLE = gui
+
+
 # generate the Apple Icon file from src/Icon.png
-$(MDIR)/AppIcon.iconset/icon_512x512@2x.png: Icon.png
-	cp $^ $@
-$(MDIR)/AppIcon.iconset/icon_512x512.png: Icon.png
-	cp $^ $@
-	sips -Z 512 $@
+$(MDIR)/AppIcon.iconset:
+	mkdir $@
+$(MDIR)/AppIcon.iconset/icon_512x512@2x.png: Icon.png $(MDIR)/AppIcon.iconset
+	cp $< $@
+$(MDIR)/AppIcon.iconset/icon_512x512.png: Icon.png $(MDIR)/AppIcon.iconset
+	sips -Z 512 $< --out $@ 1>/dev/null
 $(MDIR)/AppIcon.icns: $(MDIR)/AppIcon.iconset/icon_512x512@2x.png $(MDIR)/AppIcon.iconset/icon_512x512.png
 	iconutil -c icns $(MDIR)/AppIcon.iconset
-# build the Apple binary
-$(MDIR)/%.o: %.m
-	$(MCC) $(MFLAGS) -c $< -o $@
-$(MDIR)/%.o: %.c
-	$(MCC) $(DEBUG) $(CFLAGS) $(INCLUDES)-c $< -o $@
-gui.bin: $(MOBJS) $(MDIR)/osx.o
-# the library has to have it's path before the executable is linked
-	install_name_tool -id @executable_path/../Frameworks/OpenVR.framework/Versions/A/OpenVR deps/mac/OpenVR
-	$(MCC) $(DEBUG) $^ $(MLIBS) -rpath @loader_path/ -o $@
-#	$(MCC) $^ $(MLIBS) -rpath @loader_path/../Frameworks -o $@
-# generate the Apple .app file
-gui.app/Contents/_CodeSignature/CodeResources: gui.bin src/Info.plist $(MDIR)/AppIcon.icns
-	rm -rf gui.app
-	mkdir -p gui.app/Contents
-	cp src/Info.plist gui.app/Contents
-	mkdir gui.app/Contents/MacOS
-	cp gui.bin gui.app/Contents/MacOS/gui
-	mkdir gui.app/Contents/Resources
-	cp $(MDIR)/AppIcon.icns gui.app/Contents/Resources
-#	cp -r data gui.app/Contents/MacOS
-#	install_name_tool -id @executable_path/../Frameworks/OpenVR.framework/Versions/A/OpenVR deps/mac/OpenVR
-	mkdir -p gui.app/Contents/Frameworks/OpenVR.framework/Versions/A/Resources
-	cp deps/mac/OpenVR gui.app/Contents/Frameworks/OpenVR.framework/Versions/A
-	cp deps/mac/Info.plist gui.app/Contents/Frameworks/OpenVR.framework/Versions/A/Resources
-	ln -s A gui.app/Contents/Frameworks/OpenVR.framework/Versions/Current
-#	ln -s Versions/Current/Resources gui.app/Contents/Frameworks/OpenVR.framework/Resources
-#	ln -s Versions/Current/OpenVR gui.app/Contents/Frameworks/OpenVR.framework/OpenVR
-#	codesign --force --sign - gui.app/Contents/Frameworks/OpenVR.framework
-	codesign --force --deep --sign - gui.app
-gui.app: gui.app/Contents/_CodeSignature/CodeResources
+
+MAC_CONTENTS = $(MAC_BUNDLE).app/Contents
+
+.PHONY: $(MAC_BUNDLE).app
+$(MAC_BUNDLE).app : $(MAC_CONTENTS)/_CodeSignature/CodeResources
+
+# this has to list everything inside the app bundle
+$(MAC_CONTENTS)/_CodeSignature/CodeResources : \
+	$(MAC_CONTENTS)/MacOS/$(MAC_BUNDLE) \
+	$(MAC_CONTENTS)/Resources/AppIcon.icns \
+	$(MAC_CONTENTS)/Frameworks/libopenvr_api.dylib \
+	$(MAC_CONTENTS)/Info.plist
+	codesign --force --deep --sign - $(MAC_BUNDLE).app
+
+$(MAC_CONTENTS)/Info.plist: src/Info.plist
+	@mkdir -p $(MAC_CONTENTS)
+	cp $< $@
+
+$(MAC_CONTENTS)/Resources/AppIcon.icns: $(MDIR)/AppIcon.icns
+	@mkdir -p $(MAC_CONTENTS)/Resources
+	cp $< $@
+
+
+$(MAC_CONTENTS)/Frameworks/libopenvr_api.dylib: deps/mac/libopenvr_api.dylib
+	@mkdir -p $(MAC_CONTENTS)/Frameworks
+	cp $< $@
+
+# copies the binary, and tells it where to find libraries
+$(MAC_CONTENTS)/MacOS/$(MAC_BUNDLE): $(MAC_BUNDLE).bin
+	@mkdir -p $(MAC_CONTENTS)/MacOS
+	cp $< $@
+	install_name_tool -change @loader_path/libopenvr_api.dylib @loader_path/../Frameworks/libopenvr_api.dylib $@
+	install_name_tool -add_rpath "@loader_path/../Frameworks" $@
+
+.DELETE_ON_ERROR :
+# end build the App Bundle
 
 # build a zip of the windows exe
 voxel.zip: gui.exe
