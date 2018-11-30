@@ -1,14 +1,16 @@
 #version 410 core
 uniform sampler2D diffuse;
-in vec2 v2TexCoord;
-in vec3 v3Normal;	// world relative normals
-in vec3 v3camNormal;	// camera relative normals
-out vec4 outputColor;
+
+layout (location = 0) in vec3 inNormal;
+layout (location = 1) in vec2 inUV;
+
+layout (location = 0) out vec4 outColor;
+
 void main()
 {
-	outputColor = texture( diffuse, v2TexCoord);
+	outColor = texture( diffuse, inUV);
 
-	float ld = dot(v3Normal, vec3(0,-1,0));
+	float ld = dot(inNormal, vec3(0,-1,0));
 
-	outputColor = vec4(v3camNormal, 1);
+	outColor = vec4(inNormal, 1);
 }

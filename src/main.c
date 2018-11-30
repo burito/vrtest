@@ -75,8 +75,8 @@ int main_init(int argc, char *argv[])
 	shader = shader_load(
 		"data/shaders/vertex.shader",
 		"data/shaders/fragment.shader" );
-	shader_uniform(shader, "world");
-	shader_uniform(shader, "camera");
+	shader_uniform(shader, "modelview");
+	shader_uniform(shader, "projection");
 
 //	vr_init();
 
@@ -95,7 +95,7 @@ void main_end(void)
 }
 
 
-void render(mat4x4 pos, mat4x4 proj)
+void render(mat4x4 view, mat4x4 projection)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(shader->prog);
@@ -103,18 +103,15 @@ void render(mat4x4 pos, mat4x4 proj)
 	glDepthFunc(GL_LESS);
 	glDepthRangef( 0.1f, 30.0f);
 
-	mat4x4 m;
-	m = mat4x4_rot_y(step);		// rotate the bunny
-	m = mul(m, mat4x4_translate_float(-0.5, 0, -0.5)); // around it's own origin
-	m = mul(mat4x4_translate_float( 0, 0, -2), m);	// move it 2 metres infront of the origin
-//	m = mul( pos, m);
-	mat4x4 c = mul(proj, pos);
+	mat4x4 model = mat4x4_identity();
+	model = mul( model, mat4x4_rot_y(step) );		// rotate the bunny
+	model = mul( model, mat4x4_translate_float(-0.5, 0, -0.5) ); // around it's own origin
+	model = mul( mat4x4_translate_float( 0, 0, -2), model );	// move it 2 metres infront of the origin
+	
+	mat4x4 modelview = mul( view, model);
 
-//	log_trace("render");
-//	mat4x4_print(pos);
-
-	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, m.f);
-	glUniformMatrix4fv(shader->unif[1], 1, GL_FALSE, c.f);
+	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, modelview.f);
+	glUniformMatrix4fv(shader->unif[1], 1, GL_FALSE, projection.f);
 	bunny->draw(bunny);
 	glUseProgram(0);
 }
@@ -133,11 +130,11 @@ void main_loop(void)
 
 	if(!vr_using)
 	{
-		mat4x4 proj = mat4x4_identity();
-		proj = mat4x4_perspective(1, 30, 1, (float)vid_height / (float)vid_width);
-//		proj = mat4x4_orthographic(0.1, 30, 1, (float)vid_height / (float)vid_width);
-		mat4x4 camera = mat4x4_translate_float(0, 0, 0); // move the camera 1m above ground
-		render(camera, proj);
+		mat4x4 projection = mat4x4_identity();
+		projection = mat4x4_perspective(1, 30, 1, (float)vid_height / (float)vid_width);
+//		projection = mat4x4_orthographic(0.1, 30, 1, (float)vid_height / (float)vid_width);
+		mat4x4 view = mat4x4_translate_float(0, 0, 0); // move the camera 1m above ground
+		render(view, projection);
 	}
 	else
 	{
