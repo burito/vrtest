@@ -14,7 +14,7 @@ CC = clang -g
 MFLAGS = -Wall
 
 
-WIN_LIBS = openvr_api.dll -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
+WIN_LIBS = -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
 LIN_LIBS = deps/openvr/bin/linux64/libopenvr_api.so -lm -lGL -lX11 -lGLU -lXi -ldl
 MAC_LIBS = deps/openvr/bin/osx32/libopenvr_api.dylib -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit -rpath .
 
@@ -101,10 +101,15 @@ $(WIN_DIR)/win32.res: win32.rc $(WIN_DIR)/Icon.ico
 	$(WINDRES) -I $(WIN_DIR) -O coff src/win32.rc -o $@
 $(WIN_DIR)/%.o: %.c
 	$(WCC) $(DEBUG) $(CFLAGS) $(INCLUDES)-c $< -o $@
-openvr_api.dll:
-	cp deps/win/openvr_api.dll .
 
-gui.exe: $(WIN_OBJS)
+openvr_api.dll: deps/openvr/bin/win64/openvr_api.dll
+	cp $< $@
+
+libopenvr_api.dylib: deps/openvr/bin/osx32/libopenvr_api.dylib
+	cp $< $@
+
+
+gui.exe: $(WIN_OBJS) openvr_api.dll
 	$(WCC) $^ $(WIN_LIBS) -o $@
 
 gui: $(LIN_OBJS)
@@ -137,8 +142,6 @@ $(MAC_DIR)/%.o: %.c
 $(MAC_DIR)/%.o: %.m
 	$(CC) $(CFLAGS) -c $< -o $@
 
-libopenvr_api.dylib: deps/openvr/bin/osx32/libopenvr_api.dylib
-	cp $< $@
 
 
 
