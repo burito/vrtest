@@ -36,57 +36,16 @@ freely, subject to the following restrictions:
 #include <sys/time.h>
 
 #include "log.h"
+#include "global.h"
 
-///////////////////////////////////////////////////////////////////////////////
-//////// Public Interface to the rest of the program
-///////////////////////////////////////////////////////////////////////////////
 
-#include "keyboard.h"
 
-int killme=0;
-int sys_width  = 1980;	/* dimensions of default screen */
-int sys_height = 1200;
-float sys_dpi = 1.0;
-int vid_width  = 1280;	/* dimensions of our part of the screen */
-int vid_height = 720;
-int mouse_x = 0;
-int mouse_y = 0;
-int mickey_x = 0;
-int mickey_y = 0;
-char mouse[] = {0,0,0,0,0,0,0,0};
-// the Logitech drivers are happy to send up to 8 numbered "mouse" buttons
-// http://www.logitech.com/pub/techsupport/mouse/mac/lcc3.9.1.b20.zip
-
-#define KEYMAX 512
-char keys[KEYMAX];
-
-int fullscreen = 0;
-int fullscreen_toggle = 0;
-
-int main_init(int argc, const char *argv[]);
-void main_loop(void);
-void main_end(void);
-
-const uint64_t sys_ticksecond = 1000000000;
-static uint64_t sys_time_start = 0;
-uint64_t sys_time(void)
-{
-	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-	return (ts.tv_sec * 1000000000 + ts.tv_nsec) - sys_time_start;
-}
-
-void shell_browser(char *url)
-{
-	NSURL *MyNSURL = [NSURL URLWithString:[NSString stringWithUTF8String:url]];
-	[[NSWorkspace sharedWorkspace] openURL:MyNSURL];
-}
-
+/*
 struct fvec2
 {
 	float x, y;
 };
-/*
+
 typedef struct joystick
 {
 	int connected;
@@ -117,8 +76,12 @@ osx_joystick osx_joy[4];
 
 void ff_set(void);
 */
+int fullscreen = 0;
+int fullscreen_toggle = 0;
+
+
 static int gargc;
-static const char ** gargv;
+static char ** gargv;
 static NSWindow * window;
 static NSApplication * myapp;
 static int y_correction = 0;  // to correct mouse position for title bar
@@ -692,10 +655,13 @@ static void mouse_move(NSEvent * theEvent)
 @end
 
 
-int main(int argc, const char * argv[])
+int main(int argc, char * argv[])
 {
 	gargc = argc;
 	gargv = argv;
+	log_init();
+	log_info("Platform    : MacOS");
+
 	myapp = [MyApp sharedApplication];
 	AppDelegate * appd = [[AppDelegate alloc] init];
 	[myapp setDelegate:appd];

@@ -729,6 +729,9 @@ static void x11_end(void)
 
 int main(int argc, char* argv[])
 {
+	log_init();
+	log_info("Platform    : Xlib");
+
 	x11_init();
 	glewInit();	// belongs after GL context creation
 	int ret = main_init(argc, argv);

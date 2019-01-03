@@ -30,7 +30,7 @@ freely, subject to the following restrictions:
 #include <stdio.h>
 #include <string.h>
 
-#include "main.h"
+#include "global.h"
 #include "mesh.h"
 #include "shader.h"
 #include "text.h"
@@ -66,7 +66,7 @@ int main_init(int argc, char *argv[])
 
 	time_start = sys_time();
 
-	bunny = wf_load("data/stanford-bunny.obj");
+	bunny = wf_load("data/models/bunny/bunny.obj");
 
 //	glEnable(GL_DEPTH_TEST);
 //	glDepthFunc(GL_LESS);
@@ -148,9 +148,9 @@ void main_loop(void)
 		killme=1;
 	}
 
-	if(keys[KEY_F12])
+	if(keys[KEY_F9])
 	{
-		keys[KEY_F12] = 0;
+		keys[KEY_F9] = 0;
 		log_info("VR %s", (vr_using?"Shutdown":"Startup") );
 		if(!vr_using)vr_init();
 		else vr_end();

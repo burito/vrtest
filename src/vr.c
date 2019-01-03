@@ -29,7 +29,7 @@ freely, subject to the following restrictions:
 
 #include <stdio.h>
 #include <string.h>
-#include <openvr_capi.h>
+#include <openvr/openvr_capi.h>
 
 #include "log.h"
 
@@ -47,7 +47,7 @@ int	usleep(unsigned int useconds);
 #include "shader.h"
 #include "3dmaths.h"
 #include "glerror.h"
-#include "main.h"
+#include "global.h"
 
 
 int vr_using = 0;
