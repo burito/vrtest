@@ -1,13 +1,12 @@
 
 # Build rules
-CC = clang -g
 BINARY_NAME = vrtest
 OBJS = main.o version.o text.o fast_atof.o mesh.o image.o log.o global.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
 CFLAGS = -std=c11 -Ideps/include -Ideps/dpb/src
 VPATH = src build deps deps/dpb/src
 
 WIN_LIBS = -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
-LIN_LIBS = deps/openvr/bin/linux64/libopenvr_api.so -lm -lGL -lX11 -lGLU -lXi -ldl
+LIN_LIBS = -lm -lGL -lX11 -lGLU -lXi -ldl -rpath .
 MAC_LIBS = deps/openvr/bin/osx32/libopenvr_api.dylib -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit -rpath .
 
 _WIN_OBJS = glew.o win32.o win32.res $(OBJS)
