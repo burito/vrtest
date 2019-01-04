@@ -12,11 +12,11 @@
                 "externalConsole": true,
 
                 "linux": {
-                    "program": "~/.steam/steam/ubuntu12_32/steam-runtime/run.sh ${workspaceRoot}/gui"
+                    "program": "${workspaceRoot}/vrtest"
                 },
 
                 "osx": {
-                    "program": "${workspaceRoot}/gui.app/Contents/MacOS/gui",
+                    "program": "${workspaceRoot}/vrtest.app/Contents/MacOS/vrtest",
                     "MIMode": "lldb"
                 },
 
@@ -25,7 +25,7 @@
                     "MIMode": "gdb",
 //                  "miDebuggerPath": "C:/Program Files/LLVM/bin/lldb.exe",
 //                  "MIMode": "lldb",
-                    "program": "${workspaceRoot}/gui.exe",
+                    "program": "${workspaceRoot}/vrtest.exe",
                     "setupCommands": [
                         {
                             "description": "Enable pretty-printing for gdb",
