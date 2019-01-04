@@ -42,8 +42,6 @@ $(MAC_CONTENTS)/MacOS/$(BINARY_NAME): $(BINARY_NAME).bin
 	cp $< $@
 	install_name_tool -change @loader_path/libopenvr_api.dylib @loader_path/../Frameworks/libopenvr_api.dylib $@
 	install_name_tool -add_rpath "@loader_path/../Frameworks" $@
-
-.DELETE_ON_ERROR :
 # end build the App Bundle
 
 # Housekeeping

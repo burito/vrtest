@@ -7,10 +7,10 @@ Quickstart
     git clone --recurse-submodules git@github.com:burito/vrtest
     cd vrtest
     make -j8                    # build it using 8 threads   
-    gui.exe                             # windows
-    ./gui                               # linux
-    ./gui.bin                           # osx
-    ./gui.app/Contents/MacOS/gui        # osx with keyboard & menu
+    vrtest.exe                             # windows
+    ./vrtest                               # linux
+    ./vrtest.bin                           # osx
+    ./vrtest.app/Contents/MacOS/vrtest        # osx with keyboard & menu
 
 If you have Steam and SteamVR installed (SteamVR is listed in Steam's "Tools" menu), then press F9. If you don't have a VR headset that works with SteamVR, you can use the [null driver](https://developer.valvesoftware.com/wiki/SteamVR/steamvr.vrsettings).
 
