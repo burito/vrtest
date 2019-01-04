@@ -1,14 +1,8 @@
 
 # compiler output
-*.o
-*.exe
-gui.ilk
-gui.pdb
-*.res
-gui
-gui.bin
-gui.app
 build
+vrtest*
+
 libopenvr_api.dylib
 libopenvr_api.so
 openvr_api.dll
