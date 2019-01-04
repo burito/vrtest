@@ -17,12 +17,22 @@ _MAC_OBJS = osx.o $(OBJS)
 
 include deps/dpb/Makefile
 
+$(BINARY_NAME).exe: $(WIN_OBJS) openvr_api.dll
+
+$(BINARY_NAME): $(LIN_OBJS) libopenvr_api.so
+
+$(BINARY_NAME).bin: $(MAC_OBJS) libopenvr_api.dylib
+
 
 openvr_api.dll: deps/openvr/bin/win64/openvr_api.dll
 	cp $< $@
 
 libopenvr_api.dylib: deps/openvr/bin/osx32/libopenvr_api.dylib
 	cp $< $@
+
+libopenvr_api.so: deps/openvr/bin/linux64/libopenvr_api.so
+	cp $< $@
+
 
 # this has to list everything inside the app bundle
 $(MAC_CONTENTS)/_CodeSignature/CodeResources : \
