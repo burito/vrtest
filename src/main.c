@@ -81,7 +81,7 @@ int main_init(int argc, char *argv[])
 		"data/shaders/fragment.shader" );
 	shader_uniform(shader, "modelview");
 	shader_uniform(shader, "projection");
-
+	
 //	vr_init();
 
 	log_info("Initialised : OK");
