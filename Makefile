@@ -9,8 +9,8 @@ WIN_LIBS = -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
 LIN_LIBS = -lm -lGL -lX11 -lGLU -lXi -ldl -rpath .
 MAC_LIBS = deps/openvr/bin/osx32/libopenvr_api.dylib -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit -rpath .
 
-_WIN_OBJS = glew.o win32.o win32.res $(OBJS)
-_LIN_OBJS = glew.o x11.o $(OBJS)
+_WIN_OBJS = glew.o win32.o gfx_gl_win.o win32.res $(OBJS)
+_LIN_OBJS = glew.o linux_xlib.o gfx_gl_lin.o $(OBJS)
 _MAC_OBJS = osx.o $(OBJS)
 
 
