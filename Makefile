@@ -14,7 +14,7 @@ _LIN_OBJS = glew.o linux_xlib.o gfx_gl_lin.o $(OBJS)
 _MAC_OBJS = osx.o gfx_gl_osx.o $(OBJS)
 
 
-include deps/dpb/Makefile
+include deps/dpb/src/Makefile
 
 $(BINARY_NAME).exe: $(WIN_OBJS) openvr_api.dll
 
