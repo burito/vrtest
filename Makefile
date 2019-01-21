@@ -1,5 +1,9 @@
 
 # Build rules
+COMPANY = Daniel Burke
+COPYRIGHT = 2017-2019
+DESCRIPTION = OpenVR Test
+COMMENTS = https://github.com/burito/vrtest/
 BINARY_NAME = vrtest
 OBJS = main.o version.o text.o fast_atof.o mesh.o image.o log.o global.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
 CFLAGS = -std=c11 -Ideps/include -Ideps/dpb/src
