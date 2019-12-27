@@ -4,7 +4,7 @@ COMPANY = Daniel Burke
 COPYRIGHT = 2017-2019
 DESCRIPTION = OpenVR Test
 BINARY_NAME = vrtest
-OBJS = main.o version.o text.o fast_atof.o mesh.o image.o log.o global.o stb_image.o 3dmaths.o shader.o glerror.o vr.o
+OBJS = main.o version.o text.o fast_atof.o mesh.o image.o log.o global.o stb_image.o 3dmaths.o shader.o glerror.o vr.o fps_movement.o
 CFLAGS = -std=c11 -Ideps/include -Ideps/dpb/src
 VPATH = src build deps deps/dpb/src
 

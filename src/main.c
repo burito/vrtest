@@ -37,6 +37,7 @@ freely, subject to the following restrictions:
 #include "3dmaths.h"
 #include "log.h"
 #include "vr.h"
+#include "fps_movement.h"
 
 long long time_start = 0;
 float time = 0;
@@ -97,6 +98,10 @@ void main_end(void)
 }
 
 
+// last digit of angle is x-fov, in radians
+vec4 position = {0.0, 0.0, 0.0, 0.0};
+vec4 angle = {0.0, 0.0, 0.0, M_PI*0.5};
+
 void render(mat4x4 view, mat4x4 projection)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -110,6 +115,10 @@ void render(mat4x4 view, mat4x4 projection)
 	model = mul( model, mat4x4_translate_float(-0.5, 0, -0.5) ); // around it's own origin
 	model = mul( mat4x4_translate_float( 0, 0, -2), model );	// move it 2 metres infront of the origin
 	
+	model = mul(mat4x4_translate_vect( position.xyz ), model);	// move to player position
+	model = mul(mat4x4_rot_y(angle.y ), model);
+	model = mul(mat4x4_rot_x(angle.x ), model);
+
 	mat4x4 modelview = mul( view, model);
 
 	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, modelview.f);
@@ -157,6 +166,8 @@ void main_loop(void)
 		if(!vr_using)vr_init();
 		else vr_end();
 	}
+
+	fps_movement(&position, &angle, 0.007);
 
 	time = (float)(sys_time() - time_start)/(float)sys_ticksecond;
 	gfx_swap();
