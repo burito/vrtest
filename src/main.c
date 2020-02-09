@@ -66,8 +66,6 @@ int main_init(int argc, char *argv[])
 	glGetIntegerv(GL_MAJOR_VERSION, &gl_minor_version);
 	log_info("glGetIntVer : %d.%d", gl_major_version, gl_minor_version);
 
-	time_start = sys_time();
-
 	bunny = wf_load("data/models/bunny/bunny.obj");
 
 //	glEnable(GL_DEPTH_TEST);
@@ -82,6 +80,7 @@ int main_init(int argc, char *argv[])
 	
 //	vr_init();
 
+	time_start = sys_time();
 	log_info("Initialised : OK");
 	return 0;   // it worked!
 }
