@@ -38,6 +38,7 @@ freely, subject to the following restrictions:
 #include "log.h"
 #include "vr.h"
 #include "fps_movement.h"
+#include "spacemouse.h"
 
 long long time_start = 0;
 float time = 0;
@@ -59,7 +60,7 @@ int main_init(int argc, char *argv[])
 	log_info("GL Renderer : %s", glGetString(GL_RENDERER) );
 	log_info("GL Version  : %s", glGetString(GL_VERSION) );
 	log_info("SL Version  : %s", glGetString(GL_SHADING_LANGUAGE_VERSION) );
-	
+
 	int gl_major_version = 0;
 	int gl_minor_version = 0;
 	glGetIntegerv(GL_MAJOR_VERSION, &gl_major_version);
@@ -77,8 +78,9 @@ int main_init(int argc, char *argv[])
 		"data/shaders/fragment.shader" );
 	shader_uniform(shader, "modelview");
 	shader_uniform(shader, "projection");
-	
+
 //	vr_init();
+	spacemouse_init();
 
 	time_start = sys_time();
 	log_info("Initialised : OK");
@@ -88,6 +90,7 @@ int main_init(int argc, char *argv[])
 
 void main_end(void)
 {
+	spacemouse_shutdown();
 	if(vr_using)
 	{
 		vr_end();
@@ -113,7 +116,7 @@ void render(mat4x4 view, mat4x4 projection)
 	model = mul( model, mat4x4_rot_y(step) );		// rotate the bunny
 	model = mul( model, mat4x4_translate_float(-0.5, 0, -0.5) ); // around it's own origin
 	model = mul( mat4x4_translate_float( 0, 0, -2), model );	// move it 2 metres infront of the origin
-	
+
 	model = mul(mat4x4_translate_vec3( position.xyz ), model);	// move to player position
 	model = mul(mat4x4_rot_y(angle.y ), model);
 	model = mul(mat4x4_rot_x(angle.x ), model);
@@ -129,6 +132,8 @@ void render(mat4x4 view, mat4x4 projection)
 
 void main_loop(void)
 {
+	spacemouse_tick();
+
 	if(step > 2*M_PI)
 		step -= 2*M_PI;
 	else
@@ -171,4 +176,3 @@ void main_loop(void)
 	time = (float)(sys_time() - time_start)/(float)sys_ticksecond;
 	gfx_swap();
 }
-
