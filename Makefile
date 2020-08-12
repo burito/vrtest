@@ -4,17 +4,18 @@ COMPANY = Daniel Burke
 COPYRIGHT = 2017-2019
 DESCRIPTION = OpenVR Test
 BINARY_NAME = vrtest
-OBJS = main.o version.o text.o fast_atof.o mesh.o image.o log.o global.o stb_image.o 3dmaths.o shader.o glerror.o vr.o fps_movement.o
-CFLAGS = -std=c11 -Ideps/include -Ideps/dpb/src
-VPATH = src build deps deps/dpb/src
+OBJS = main.o version.o text.o fast_atof.o mesh.o image.o log.o global.o \
+	stb_image.o 3dmaths.o shader.o glerror.o vr.o fps_movement.o spacemouse.o
+CFLAGS = -std=c11 -Ideps/include -Ideps/dpb/src -Ideps/dpb/deps/hidapi/hidapi
+VPATH = src build deps deps/dpb/src deps/dpb/deps/hidapi/
 
 WIN_LIBS = -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
 LIN_LIBS = -lm -lGL -lX11 -lGLU -lXi -ldl -rpath .
 MAC_LIBS = deps/openvr/bin/osx32/libopenvr_api.dylib -framework OpenGL -framework CoreVideo -framework Cocoa -framework IOKit -rpath .
 
-_WIN_OBJS = glew.o win32.o gfx_gl_win.o win32.res $(OBJS)
-_LIN_OBJS = glew.o linux_xlib.o gfx_gl_lin.o $(OBJS)
-_MAC_OBJS = osx.o gfx_gl_osx.o $(OBJS)
+_WIN_OBJS = glew.o win32.o gfx_gl_win.o win32.res windows/hid.o $(OBJS)
+_LIN_OBJS = glew.o linux_xlib.o gfx_gl_lin.o linux/hid.o $(OBJS)
+_MAC_OBJS = osx.o gfx_gl_osx.o mac/hid.o $(OBJS)
 
 
 include deps/dpb/src/Makefile
