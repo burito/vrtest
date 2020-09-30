@@ -32,7 +32,7 @@ freely, subject to the following restrictions:
 #include <string.h>
 #include <stdlib.h>
 
-#include "stb_image.h"
+#include <stb/stb_image.h>
 
 #include "image.h"
 #include "text.h"
@@ -66,7 +66,7 @@ static void img_glinit(IMG *img)
 #endif
 	default: type = GL_NONE;
 	}
-	
+
 //		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 //		glPixelTransferi(GL_INDEX_SHIFT, 8);
 //		glColorTable(GL_COLOR_TABLE, GL_RGB8, 256, GL_RGB, GL_UNSIGNED_BYTE, img->palette);
@@ -134,4 +134,3 @@ int main(int argc, char *argv[])
 }
 
 #endif
-
