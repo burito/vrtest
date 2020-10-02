@@ -44,7 +44,7 @@ void Sleep (int dwMilliseconds);
 int	usleep(unsigned int useconds);
 #endif
 
-
+#include "vr_helper.h"
 #include "shader.h"
 #include "3dmaths.h"
 #include "glerror.h"
@@ -403,6 +403,10 @@ int vr_init(void)
 	}
 
 	uint32_t vrToken = VR_InitInternal(&eError, EVRApplicationType_VRApplication_Scene);
+	if(vrToken != 1)
+	{	// in testing this equals 1, but don't know what it means
+		log_info("vrToken = %d", vrToken);
+	}
 	if (eError != EVRInitError_VRInitError_None)
 	{
 		log_fatal("VR_InitInternal: %s", VR_GetVRInitErrorAsSymbol(eError));
@@ -411,7 +415,7 @@ int vr_init(void)
 
 	char fnTableName[128];
 
-	int result1 = sprintf(fnTableName, "FnTable:%s", IVRSystem_Version);
+	sprintf(fnTableName, "FnTable:%s", IVRSystem_Version);
 	OVR = (struct VR_IVRSystem_FnTable *)VR_GetGenericInterface(fnTableName, &eError);
 	if (eError != EVRInitError_VRInitError_None)
 	{
@@ -419,7 +423,7 @@ int vr_init(void)
 		return 2;
 	}
 
-	result1 = sprintf(fnTableName, "FnTable:%s", IVRCompositor_Version);
+	sprintf(fnTableName, "FnTable:%s", IVRCompositor_Version);
 	OVRC = (struct VR_IVRCompositor_FnTable *)VR_GetGenericInterface(fnTableName, &eError);
 	if (eError != EVRInitError_VRInitError_None)
 	{
@@ -427,7 +431,7 @@ int vr_init(void)
 		return 2;
 	}
 
-	result1 = sprintf(fnTableName, "FnTable:%s", IVRRenderModels_Version);
+	sprintf(fnTableName, "FnTable:%s", IVRRenderModels_Version);
 	OVRM = (struct VR_IVRRenderModels_FnTable *)VR_GetGenericInterface(fnTableName, &eError );
 	if (eError != EVRInitError_VRInitError_None)
 	{
@@ -699,9 +703,18 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	EVRCompositorError cErr;
 	Texture_t leftEyeTexture = {(void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, ETextureType_TextureType_OpenGL, EColorSpace_ColorSpace_Gamma};
 	cErr = OVRC->Submit(EVREye_Eye_Left, &leftEyeTexture, NULL, EVRSubmitFlags_Submit_Default);
+	if(cErr)
+	{
+		log_error("OVRC->Submit(left) = %s", vrc_error(cErr));
+		return;
+	}
 	Texture_t rightEyeTexture = {(void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, ETextureType_TextureType_OpenGL, EColorSpace_ColorSpace_Gamma};
 	cErr = OVRC->Submit(EVREye_Eye_Right, &rightEyeTexture, NULL, EVRSubmitFlags_Submit_Default);
-
+	if(cErr)
+	{
+		log_error("OVRC->Submit(right) = %s", vrc_error(cErr));
+		return;
+	}
 
 // work around to force HMD vsync from official example
 	glFinish();

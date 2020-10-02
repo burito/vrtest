@@ -5,8 +5,9 @@ COPYRIGHT = 2017-2019
 DESCRIPTION = OpenVR Test
 BINARY_NAME = vrtest
 OBJS = main.o version.o text.o fast_atof.o mesh.o image.o log.o global.o \
-	stb_image.o 3dmaths.o shader.o glerror.o vr.o fps_movement.o spacemouse.o
-CFLAGS = -Wall -std=c11 -isystem deps -Ideps/dpb/src -Ideps/dpb/deps/hidapi/hidapi
+	stb_image.o 3dmaths.o shader.o glerror.o vr.o fps_movement.o \
+	vr_helper.o spacemouse.o
+CFLAGS = -std=c11 -Wall -isystem deps -Ideps/dpb/src -Ideps/dpb/deps/hidapi/hidapi
 VPATH = src build deps deps/dpb/src deps/dpb/deps/hidapi/
 
 WIN_LIBS = -lshell32 -luser32 -lgdi32 -lopengl32 -lwinmm -lws2_32 -lxinput9_1_0
