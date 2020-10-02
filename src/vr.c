@@ -30,10 +30,7 @@ freely, subject to the following restrictions:
 #include <stdio.h>
 #include <string.h>
 
-_Pragma("GCC diagnostic push")
-_Pragma("GCC diagnostic ignored \"-Wunused-variable\"")
 #include <openvr/headers/openvr_capi.h>
-_Pragma("GCC diagnostic pop")
 
 #include "log.h"
 
