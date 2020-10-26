@@ -100,7 +100,7 @@ int controller_right_id = -1;
 
 mat4x4 eye_left, eye_left_proj;
 mat4x4 eye_right, eye_right_proj;
-GLSLSHADER *eye_prog = NULL;
+struct GLSLSHADER *eye_prog = NULL;
 GLuint eye_VAO = 0;
 GLuint eye_VBO, eye_EAB;
 
@@ -304,21 +304,21 @@ void ovr_draw(int i)
 	glBindTexture( GL_TEXTURE_2D, 0 );
 }
 
-extern GLSLSHADER *shader;
+extern struct GLSLSHADER *shader;
 void ovr_render(mat4x4 pos, mat4x4 proj)
 {
 	mat4x4 w = mul(proj,pos );
-	glUseProgram(shader->prog);
-	glUniformMatrix4fv(shader->unif[1], 1, GL_FALSE, w.f);
+	glUseProgram(shader->program);
+	glUniformMatrix4fv(shader->uniforms[1], 1, GL_FALSE, w.f);
 
 	if(controller_left_id != -1)
 	{
-		glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, controller_left.f);
+		glUniformMatrix4fv(shader->uniforms[0], 1, GL_FALSE, controller_left.f);
 		ovr_draw(0);
 	}
 	if(controller_right_id != -1)
 	{
-		glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, controller_right.f);
+		glUniformMatrix4fv(shader->uniforms[0], 1, GL_FALSE, controller_right.f);
 		ovr_draw(0);
 	}
 
@@ -678,7 +678,7 @@ void vr_loop( void render(mat4x4, mat4x4) )
 	glViewport( 0, 0, vid_width, vid_height );
 
 	glBindVertexArray( eye_VAO );
-	glUseProgram( eye_prog->prog );
+	glUseProgram( eye_prog->program );
 
 	// render left eye (first half of index array )
 	glBindTexture(GL_TEXTURE_2D, leftEyeDesc.m_nResolveTextureId );

@@ -49,9 +49,9 @@ void gfx_init(void);
 void gfx_end(void);
 void gfx_swap(void);
 
-struct MESH_OPENGL * bunny;
+struct MESH_OPENGL *bunny;
 
-GLSLSHADER *shader;
+struct GLSLSHADER *shader;
 
 int main_init(int argc, char *argv[])
 {
@@ -67,21 +67,26 @@ int main_init(int argc, char *argv[])
 	glGetIntegerv(GL_MAJOR_VERSION, &gl_minor_version);
 	log_info("glGetIntVer : %d.%d", gl_major_version, gl_minor_version);
 
-//	bunny = mesh_load("data/models/bunny/bunny.obj");
+	bunny = mesh_load("data/models/bunny/bunny.obj");
 //	bunny = mesh_load("data/models/powerplant/powerplant.obj");
 //	bunny = mesh_load("data/models/lpshead/head.OBJ");
 //	bunny = mesh_load("data/models/buddha/buddha.obj");
 //	bunny = mesh_load("data/models/hairball/hairball.obj");
-	bunny = mesh_load("data/models/sponza/sponza.obj");
+//	bunny = mesh_load("data/models/sponza/sponza.obj");
 //	bunny = mesh_load("data/models/San_Miguel/san-miguel.obj");
+	log_info("loaded");
 
 //	glEnable(GL_DEPTH_TEST);
 //	glDepthFunc(GL_LESS);
 //	glDepthRangef( 0.1f, 30.0f);
 
+	glDepthFunc(GL_ALWAYS);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	shader = shader_load(
-		"data/shaders/vertex.shader",
-		"data/shaders/fragment.shader" );
+		"data/shaders/shader.vert",
+		"data/shaders/shader.frag" );
 	shader_uniform(shader, "modelview");
 	shader_uniform(shader, "projection");
 
@@ -107,16 +112,24 @@ void main_end(void)
 
 
 // last digit of angle is x-fov, in radians
-vec4 position = {{0.0, 0.0, 0.0, 0.0}};
-vec4 angle = {{0.0, 0.0, 0.0, M_PI*0.5}};
+//vec4 position = {{0.0, 0.0, 0.0, 0.0}};
+//vec4 angle = {{0.0, 0.0, 0.0, M_PI*0.5}};
+
+// good view of sponza
+//vec4 position = {{-0.065377, -0.378700, 1.971844, 0.0}};
+//vec4 angle = {{0.600000, -1.989000, 0.000000, M_PI*0.5}};
+
+// good view of bunny
+vec4 position = {{0.052396, -0.672701, 1.255187, 0.0}};
+vec4 angle = {{0.327000, 0.060000, 0.000000, M_PI*0.5}};
 
 void render(mat4x4 view, mat4x4 projection)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glUseProgram(shader->prog);
+	glUseProgram(shader->program);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	glDepthRangef( 0.1f, 30.0f);
+	glDepthRangef( 0.0f, 30.0f);
 
 	mat4x4 model = mat4x4_identity();
 //	model = mul( model, mat4x4_rot_y(step) );		// rotate the bunny
@@ -129,8 +142,8 @@ void render(mat4x4 view, mat4x4 projection)
 
 	mat4x4 modelview = mul( view, model);
 
-	glUniformMatrix4fv(shader->unif[0], 1, GL_FALSE, modelview.f);
-	glUniformMatrix4fv(shader->unif[1], 1, GL_FALSE, projection.f);
+	glUniformMatrix4fv(shader->uniforms[0], 1, GL_FALSE, modelview.f);
+	glUniformMatrix4fv(shader->uniforms[1], 1, GL_FALSE, projection.f);
 	mesh_draw(bunny);
 	glUseProgram(0);
 }

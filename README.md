@@ -29,7 +29,7 @@ This may not be necessary anymore.
 * Install current Nvidia drivers (451.67)
 * Install [msys2-x86_64-20200629.exe](https://www.msys2.org/)
 ```bash
-pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-imagemagick mingw-w64-x86_64-clang mingw-w64-x86_64-clang-tools-extra git vim man-pages-posix --disable-download-timeout
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-imagemagick mingw-w64-x86_64-clang mingw-w64-x86_64-clang-tools-extra git vim man-pages-posix mingw-w64-x86_64-glslang --disable-download-timeout
 ```
 
 ### Linux
@@ -42,6 +42,14 @@ apt install nvidia-410 vulkan-utils build-essential clang imagemagick
 
 ### MacOS
 * Install XCode
+
+### VSCode
+I encourage the following extensions...
+* slevesque.shader
+* cadenas.vscode-glsllint
+* ms-vscode.cpptools
+* streetsidesoftware.code-spell-checker
+
 
 ## Libraries
 They are almost all in submodules now.

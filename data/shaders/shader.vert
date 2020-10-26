@@ -1,6 +1,8 @@
 #version 410 core
+
 uniform mat4 modelview;
 uniform mat4 projection;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec2 inUV;
@@ -14,4 +16,3 @@ void main()
 	fragNormal = mat3(modelview) * inNormal;
 	gl_Position = projection * modelview * vec4(inPosition, 1);
 }
-
