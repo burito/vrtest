@@ -65,6 +65,7 @@ int main_init(int argc, char *argv[])
 	glGetIntegerv(GL_MAJOR_VERSION, &gl_major_version);
 	glGetIntegerv(GL_MAJOR_VERSION, &gl_minor_version);
 	log_info("glGetIntVer : %d.%d", gl_major_version, gl_minor_version);
+	glEnable(GL_FRAMEBUFFER_SRGB);
 
 //	bunny = mesh_load("data/models/bunny/bunny.obj");
 //	bunny = mesh_load("data/models/powerplant/powerplant.obj");
