@@ -33,7 +33,6 @@ freely, subject to the following restrictions:
 #include "global.h"
 #include <mesh_gl.h>
 #include "shader.h"
-#include "text.h"
 #include "3dmaths.h"
 #include "log.h"
 #include "vr.h"
