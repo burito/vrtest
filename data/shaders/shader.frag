@@ -1,6 +1,9 @@
 #version 410 core
 
 uniform sampler2D diffuse;
+uniform sampler2D specular;
+uniform float time;
+
 
 layout (location = 0) in vec3 fragNormal;
 layout (location = 1) in vec2 fragUV;
@@ -9,13 +12,17 @@ layout (location = 0) out vec4 outColor;
 
 void main()
 {
+	vec3 light = normalize(vec3(sin(time), cos(time), 5.));
+
 	// test if there is a texture bound
 	if( textureSize(diffuse, 0).x > 1 )
 	{
-		outColor = texture( diffuse, vec2(fragUV.x, 1.0 - fragUV.y));
-		outColor = outColor * fragNormal.z + vec4(fragNormal*0.5, 1);
-		float ld = dot(fragNormal, vec3(0,-1,0));
-//		outColor = outColor * ld;
+		float ambient = 0.3;
+		vec4 diff = texture( diffuse, fragUV);
+		vec4 spec = texture( specular, fragUV);
+//		outColor = vec4(diff.xyz * fragNormal.z, diff.w); // + vec4(fragNormal*0.5, 1);
+		float ld = dot(fragNormal, light );
+		outColor = vec4( (spec.xyz*ld + diff.xyz*fragNormal.z*(1.0-ambient) + diff.xyz*ambient), diff.w);
 	}
 	else
 	{	// render it with normals, because normals are cool

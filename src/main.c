@@ -67,14 +67,16 @@ int main_init(int argc, char *argv[])
 	glGetIntegerv(GL_MAJOR_VERSION, &gl_minor_version);
 	log_info("glGetIntVer : %d.%d", gl_major_version, gl_minor_version);
 
-	bunny = mesh_load("data/models/bunny/bunny.obj");
+//	bunny = mesh_load("data/models/bunny/bunny.obj");
 //	bunny = mesh_load("data/models/powerplant/powerplant.obj");
+	bunny = mesh_load("data/models/lpshead/heads.obj");
 //	bunny = mesh_load("data/models/lpshead/head.OBJ");
 //	bunny = mesh_load("data/models/buddha/buddha.obj");
 //	bunny = mesh_load("data/models/hairball/hairball.obj");
 //	bunny = mesh_load("data/models/sponza/sponza.obj");
 //	bunny = mesh_load("data/models/San_Miguel/san-miguel.obj");
-	log_info("loaded");
+//	bunny = mesh_load("data/models/stargate/stargate.obj");
+//	bunny = mesh_load("data/models/xyzrgb_dragon/xyzrgb_dragon.obj");
 
 //	glEnable(GL_DEPTH_TEST);
 //	glDepthFunc(GL_LESS);
@@ -89,6 +91,11 @@ int main_init(int argc, char *argv[])
 		"data/shaders/shader.frag" );
 	shader_uniform(shader, "modelview");
 	shader_uniform(shader, "projection");
+
+	shader_uniform(shader, "diffuse");
+	shader_uniform(shader, "specular");
+	shader_uniform(shader, "time");
+
 
 //	vr_init();
 	spacemouse_init();
@@ -144,6 +151,11 @@ void render(mat4x4 view, mat4x4 projection)
 
 	glUniformMatrix4fv(shader->uniforms[0], 1, GL_FALSE, modelview.f);
 	glUniformMatrix4fv(shader->uniforms[1], 1, GL_FALSE, projection.f);
+	glUniform1i(shader->uniforms[2], 0);
+	glUniform1i(shader->uniforms[3], 1);
+	glUniform1f(shader->uniforms[4], time);
+
+
 	mesh_draw(bunny);
 	glUseProgram(0);
 }
@@ -175,6 +187,14 @@ void main_loop(void)
 		vr_loop(render);
 	}
 
+
+	if(keys[KEY_Z])
+	{
+		keys[KEY_Z] = 0;
+		log_info("rebuilding shader");
+		shader_rebuild(shader);
+
+	}
 
 	if(keys[KEY_ESCAPE])
 	{
