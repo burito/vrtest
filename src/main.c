@@ -69,8 +69,8 @@ int main_init(int argc, char *argv[])
 
 //	bunny = mesh_load("data/models/bunny/bunny.obj");
 //	bunny = mesh_load("data/models/powerplant/powerplant.obj");
-	bunny = mesh_load("data/models/lpshead/heads.obj");
-//	bunny = mesh_load("data/models/lpshead/head.OBJ");
+//	bunny = mesh_load("data/models/lpshead/heads.obj");
+	bunny = mesh_load("data/models/lpshead/head.OBJ");
 //	bunny = mesh_load("data/models/buddha/buddha.obj");
 //	bunny = mesh_load("data/models/hairball/hairball.obj");
 //	bunny = mesh_load("data/models/sponza/sponza.obj");

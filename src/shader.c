@@ -31,6 +31,8 @@ freely, subject to the following restrictions:
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <errno.h>
+
 
 #include "glerror.h"
 #include "shader.h"
